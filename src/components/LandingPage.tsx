@@ -21,8 +21,6 @@ import {
   Scan,
   Layers,
   ChevronDown,
-  Sun,
-  Moon,
   Check,
   Terminal,
   Mail,
@@ -33,13 +31,9 @@ import {
 } from "lucide-react";
 import { NavTab } from "./Header";
 import { ChemlyLogo } from "./ChemlyLogo";
-import { AudioController } from "./AudioController";
+import { Navbar } from "./navbar";
 
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
-
-interface LandingPageProps {
+export interface LandingPageProps {
   onEnterApp: (mode?: NavTab) => void;
   onOpenPeriodicTable: () => void;
   onOpenNotes?: () => void;
@@ -118,23 +112,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onOpenNotes,
   onSelectEquation,
 }) => {
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark } = useTheme();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const heroTitleRef = useRef<HTMLHeadingElement>(null);
   const mockupRef = useRef<HTMLDivElement>(null);
-
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPos = window.scrollY || document.documentElement.scrollTop;
-      setIsScrolled(scrollPos > 35);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -149,46 +131,55 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   const heroMockupY = useTransform(scrollYProgress, [0, 0.25], [15, -35]);
 
-  const [reactionIndex, setReactionIndex] = useState(0);
-  const [typewriterText, setTypewriterText] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [reactionIndex, setReactionIndex] = useState<number>(0);
+  const [typewriterText, setTypewriterText] = useState<string>("");
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const [copied, setCopied] = useState(false);
-  const [emailInput, setEmailInput] = useState("");
-  const [emailSuccess, setEmailSuccess] = useState(false);
+  const [copied, setCopied] = useState<boolean>(false);
+  const [emailInput, setEmailInput] = useState<string>("");
+  const [emailSuccess, setEmailSuccess] = useState<boolean>(false);
 
-  const currentReaction = TYPEWRITER_REACTIONS[reactionIndex];
+  // Runtime null guard
+  const currentReaction = TYPEWRITER_REACTIONS[reactionIndex] ?? TYPEWRITER_REACTIONS[0];
 
+  // GSAP Safety Hook
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    gsap.registerPlugin(ScrollTrigger);
+
     const ctx = gsap.context(() => {
       if (heroTitleRef.current) {
-        gsap.fromTo(
-          heroTitleRef.current.querySelectorAll(".hero-char"),
-          {
-            opacity: 0,
-            y: 40,
-            rotateX: -60,
-            filter: "blur(6px)",
-          },
-          {
-            opacity: 1,
-            y: 0,
-            rotateX: 0,
-            filter: "blur(0px)",
-            duration: 1.1,
-            stagger: 0.03,
-            ease: "power4.out",
-          }
-        );
+        const chars = heroTitleRef.current.querySelectorAll(".hero-char");
+        if (chars.length > 0) {
+          gsap.fromTo(
+            chars,
+            {
+              opacity: 0,
+              y: 35,
+              rotateX: -50,
+              filter: "blur(5px)",
+            },
+            {
+              opacity: 1,
+              y: 0,
+              rotateX: 0,
+              filter: "blur(0px)",
+              duration: 1,
+              stagger: 0.03,
+              ease: "power4.out",
+            }
+          );
+        }
       }
     }, containerRef);
 
     return () => ctx.revert();
   }, []);
 
+  // Typewriter Loop
   useEffect(() => {
-    const fullText = currentReaction.equation;
-    let timer: NodeJS.Timeout;
+    const fullText = currentReaction?.equation || "";
+    let timer: ReturnType<typeof setTimeout>;
 
     if (!isDeleting) {
       if (typewriterText.length < fullText.length) {
@@ -229,16 +220,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   };
 
   const handleLaunchReaction = () => {
-    if (onSelectEquation) {
+    if (onSelectEquation && currentReaction) {
       onSelectEquation(currentReaction.equation, currentReaction.medium);
     }
-    onEnterApp("solver");
+    onEnterApp?.("solver");
   };
 
   const handleCopyEquation = () => {
-    navigator.clipboard.writeText(currentReaction.balanced);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (currentReaction?.balanced) {
+      navigator.clipboard.writeText(currentReaction.balanced);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -255,7 +248,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             : "bg-[#fcfdfc] border-zinc-300 shadow-zinc-400/25"
         }`}
       >
-        {/* Background Dither */}
+        {/* Background Dither Component */}
         <div className="absolute top-0 left-0 right-0 h-[1050px] pointer-events-auto opacity-80 dark:opacity-70 select-none overflow-hidden z-0">
           <Dither
             waveSpeed={0.05}
@@ -275,111 +268,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           />
         </div>
 
-        {/* ========================================================================= */}
-        {/* HARDWARE-ALIGNED MACBOOK NOTCH -> DYNAMIC FLOATING CAPSULE ON SCROLL     */}
-        {/* ========================================================================= */}
-        <div
-          className={`z-50 flex justify-center w-full pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-            isScrolled
-              ? "fixed top-3 left-0 right-0 px-4"
-              : "absolute top-0 left-0 right-0 px-0"
-          }`}
-        >
-          <header
-            className={`pointer-events-auto flex items-center justify-between transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] border shadow-2xl backdrop-blur-2xl ${
-              isScrolled
-                ? `w-full max-w-3xl px-5 sm:px-7 py-2.5 rounded-full border-zinc-700/80 shadow-[0_15px_40px_rgba(0,0,0,0.55)] ${
-                    isDark
-                      ? "bg-[#0b0c10]/90 text-white"
-                      : "bg-white/95 text-zinc-900 border-zinc-300 shadow-zinc-400/30"
-                  }`
-                : `w-full max-w-5xl px-6 sm:px-10 py-3.5 rounded-b-3xl border-t-0 border-x border-b ${
-                    isDark
-                      ? "bg-[#0b0c10]/95 border-zinc-800/90 text-white shadow-black/50"
-                      : "bg-[#0f1115]/95 text-white border-zinc-900 shadow-zinc-900/15"
-                  }`
-            }`}
-          >
-            <div
-              className="flex items-center gap-2.5 cursor-pointer group"
-              onClick={() => onEnterApp("solver")}
-            >
-              <div className="transition-transform duration-300 group-hover:scale-105">
-                <ChemlyLogo size="sm" />
-              </div>
-            </div>
+        {/* 1. Navbar Hardware/Floating Notch */}
+        <Navbar
+          onEnterApp={onEnterApp}
+          onOpenPeriodicTable={onOpenPeriodicTable}
+          onOpenNotes={onOpenNotes}
+        />
 
-            <div
-              className={`hidden md:flex items-center gap-8 text-xs font-semibold tracking-wide transition-colors ${
-                !isScrolled || isDark ? "text-zinc-300" : "text-zinc-700"
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => onEnterApp("solver")}
-                className="hover:text-[#c2f04e] transition-colors cursor-pointer flex items-center gap-1 group"
-              >
-                <span>Penyetara Redoks</span>
-                <ChevronDown className="w-3 h-3 opacity-60 transition-transform group-hover:translate-y-0.5" />
-              </button>
-              <button
-                type="button"
-                onClick={onOpenPeriodicTable}
-                className="hover:text-[#c2f04e] transition-colors cursor-pointer flex items-center gap-1 group"
-              >
-                <span>Tabel Periodik</span>
-                <ChevronDown className="w-3 h-3 opacity-60 transition-transform group-hover:translate-y-0.5" />
-              </button>
-              {onOpenNotes && (
-                <button
-                  type="button"
-                  onClick={onOpenNotes}
-                  className="hover:text-[#c2f04e] transition-colors cursor-pointer"
-                >
-                  Glosarium
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <AudioController />
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer hover:bg-white/5 ${
-                  !isScrolled || isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-black"
-                }`}
-                title="Ganti Tema"
-              >
-                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onEnterApp("solver")}
-                className="relative group overflow-hidden bg-[#c2f04e] hover:bg-[#b2e23f] text-black font-extrabold text-xs px-4 py-2 rounded-full flex items-center gap-1.5 cursor-pointer shadow-sm transition-all duration-300 hover:shadow-[0_0_20px_rgba(194,240,78,0.55)] hover:scale-105 active:scale-95"
-              >
-                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/50 to-transparent pointer-events-none" />
-                <span className="relative z-10">Mulai</span>
-                <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5] relative z-10 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </button>
-            </div>
-          </header>
-        </div>
-
-        {/* Hero Section */}
+        {/* 2. Hero Section */}
         <main className="relative z-20 pt-24 sm:pt-32 pb-16 px-4 sm:px-8">
           <div className="max-w-4xl mx-auto text-center space-y-7">
             <div className="space-y-4">
-              {/* Highlighted Chemly Badge */}
+              {/* Highlight Badge */}
               <div className="flex justify-center">
                 <span className="inline-flex items-center gap-2 font-black text-xs sm:text-sm tracking-[0.35em] uppercase px-5 py-2 rounded-full border border-[#2d8517]/40 dark:border-[#c2f04e]/50 bg-[#2d8517]/15 dark:bg-[#c2f04e]/10 text-[#094d11] dark:text-[#c2f04e] backdrop-blur-xl shadow-[0_0_25px_rgba(194,240,78,0.25)] transition-transform duration-300 hover:scale-105">
                   <Sparkles className="w-3.5 h-3.5 animate-pulse text-[#2d8517] dark:text-[#c2f04e]" />
-                  <span>Chemly</span>
+                  <span>Chemly Platform</span>
                 </span>
               </div>
 
-              {/* Headline Title */}
+              {/* Title Headline */}
               <h1
                 ref={heroTitleRef}
                 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.06] text-balance text-zinc-950 dark:text-white"
@@ -396,7 +304,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 ))}
               </h1>
 
-              {/* Dynamic Subline Calligraphy */}
+              {/* Dynamic Handwriting */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-2xl sm:text-4xl lg:text-5xl font-serif">
                 <span className="text-zinc-700 dark:text-zinc-400 font-normal italic">
                   Solusi mutlak,
@@ -429,11 +337,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               Dapatkan dekomposisi paruh reaksi, neraca muatan elektron, dan sintaks LaTeX seketika.
             </p>
 
-            {/* Action Button */}
+            {/* Action CTA */}
             <div className="flex items-center justify-center gap-4 pt-2">
               <button
                 type="button"
-                onClick={() => onEnterApp("solver")}
+                onClick={() => onEnterApp?.("solver")}
                 className="relative group overflow-hidden bg-[#0b0c0f] hover:bg-[#12141a] text-white pl-7 pr-3 py-3 rounded-full text-sm font-bold tracking-wide flex items-center gap-4 cursor-pointer shadow-2xl border border-zinc-700/80 transition-all duration-300 hover:border-[#c2f04e]/70 hover:shadow-[0_0_35px_rgba(194,240,78,0.3)] hover:scale-[1.03] active:scale-[0.98]"
               >
                 <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-[#c2f04e]/20 to-transparent pointer-events-none" />
@@ -445,7 +353,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          {/* Console Mockup */}
+          {/* Interactive 3D Console */}
           <motion.div
             style={{ y: heroMockupY }}
             className="w-full max-w-5xl mx-auto mt-14 sm:mt-18 perspective-[1400px]"
@@ -458,19 +366,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               className="relative rounded-3xl border border-zinc-700/60 bg-[#0c0d11]/95 text-zinc-100 p-5 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] backdrop-blur-3xl transition-shadow duration-300 hover:shadow-[0_30px_70px_-10px_rgba(158,232,57,0.15)]"
             >
               <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6">
+                
+                {/* Mockup Sidebar */}
                 <div className="md:col-span-3 border-b md:border-b-0 md:border-r border-zinc-800/80 pr-4 pb-4 md:pb-0 space-y-3.5">
                   <div className="flex items-center gap-2 px-1 pt-0.5">
                     <div className="w-4 h-4 rounded-full bg-[#c2f04e] flex items-center justify-center text-[9px] font-bold text-black shadow-sm">
                       ✓
                     </div>
                     <span className="text-xs font-semibold text-zinc-200 tracking-wide">
-                      Chemly Lab
+                      Chemly Lab Core
                     </span>
                   </div>
 
                   <div className="space-y-1.5 text-xs">
                     <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 px-2 block">
-                      Navigasi
+                      Navigasi Cepat
                     </span>
                     <div className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-zinc-800/90 text-white font-medium border border-zinc-700/50 shadow-inner">
                       <FlaskConical className="w-4 h-4 text-[#c2f04e]" />
@@ -478,7 +388,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </div>
                     <button
                       type="button"
-                      onClick={() => onEnterApp("scanner")}
+                      onClick={() => onEnterApp?.("scanner")}
                       className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-zinc-400 hover:text-white transition-colors cursor-pointer text-left hover:bg-zinc-800/40"
                     >
                       <Scan className="w-4 h-4" />
@@ -500,6 +410,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                 </div>
 
+                {/* Mockup Display Terminal */}
                 <div className="md:col-span-9 space-y-4">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div className="p-3.5 rounded-2xl border border-zinc-800/80 bg-[#13141a]/90 backdrop-blur-md">
@@ -590,12 +501,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </div>
                   </div>
                 </div>
+
               </div>
             </motion.div>
           </motion.div>
         </main>
 
-        {/* Marquee Ticker */}
+        {/* 3. Ticker Marquee */}
         <section
           className={`w-full overflow-hidden py-4 border-y transition-colors select-none ${
             isDark
@@ -603,14 +515,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               : "bg-zinc-100/70 border-zinc-200 text-zinc-600"
           }`}
         >
-          <div className="flex w-max animate-chemly-marquee gap-8">
+          <div className="flex w-max gap-8 overflow-x-hidden">
             {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, idx) => (
               <div
                 key={idx}
                 className={`flex items-center gap-2.5 px-4 py-1.5 rounded-full border text-xs font-medium whitespace-nowrap ${
                   isDark
                     ? "bg-zinc-900/80 border-zinc-800 text-zinc-300"
-                    : "bg-white border-zinc-200 text-zinc-800 shadow-2xs"
+                    : "bg-white border-zinc-200 text-zinc-800 shadow-sm"
                 }`}
               >
                 <span>{item.icon}</span>
@@ -620,13 +532,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </section>
 
-        {/* Section Manifesto */}
+        {/* 4. Manifesto Section */}
         <section className="w-full max-w-5xl mx-auto px-4 sm:px-8 py-24 sm:py-32">
           <div className="space-y-6">
             <div className="space-y-1">
               <div className="inline-flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-[#c2f04e] uppercase">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Chemly Platform</span>
+                <span>Chemly Engine</span>
               </div>
 
               <div className="h-[100px] sm:h-[130px] w-full max-w-xl">
@@ -662,7 +574,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </section>
 
-        {/* Bento Grid */}
+        {/* 5. Bento Grid */}
         <section className="w-full max-w-5xl mx-auto px-4 sm:px-8 pb-24">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
             <div className="md:col-span-5 rounded-[36px] bg-[#9ee839] text-black p-6 sm:p-8 flex flex-col justify-between overflow-hidden shadow-xl transition-transform duration-300 hover:-translate-y-1">
@@ -750,7 +662,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </section>
 
-        {/* FAQ Section */}
+        {/* 6. FAQ Section */}
         <section className="w-full max-w-4xl mx-auto px-4 sm:px-8 pb-28">
           <div className="text-center mb-8 space-y-2">
             <h3 className="text-2xl sm:text-3xl font-bold tracking-tight">
@@ -800,7 +712,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </section>
 
-        {/* Footer */}
+        {/* 7. Footer CTA Card */}
         <div className="relative pt-12">
           <div className="max-w-3xl mx-auto px-4 sm:px-8 relative z-20 mb-[-60px]">
             <div className="rounded-3xl bg-white text-black p-8 sm:p-11 shadow-2xl border border-zinc-200 text-center space-y-5">
@@ -808,8 +720,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 Mulai Selesaikan Persamaan Redoks Anda Hari Ini
               </h3>
               <p className="text-xs sm:text-sm text-zinc-600 max-w-md mx-auto">
-                Dapatkan koefisien bulat terkecil lengkap dengan langkah paruh reaksi tanpa perlu
-                instalasi.
+                Dapatkan koefisien bulat terkecil lengkap dengan langkah paruh reaksi tanpa perlu instalasi.
               </p>
 
               <form
@@ -844,10 +755,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          <div className="w-full rounded-t-[48px] sm:rounded-t-[64px] bg-[#9ee839] text-black pt-28 sm:pt-32 pb-14 px-6 sm:px-12 relative overflow-hidden z-10">
+          <footer className="w-full rounded-t-[48px] sm:rounded-t-[64px] bg-[#9ee839] text-black pt-28 sm:pt-32 pb-14 px-6 sm:px-12 relative overflow-hidden z-10">
             <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
               <div
-                onClick={() => onEnterApp("solver")}
+                onClick={() => onEnterApp?.("solver")}
                 className="flex items-center gap-3.5 cursor-pointer select-none group p-2 -m-2 rounded-2xl transition-all duration-300 hover:bg-black/10"
               >
                 <div className="p-2.5 rounded-xl bg-black text-[#9ee839] shadow-md transition-all duration-300 group-hover:scale-110 group-hover:bg-zinc-900 group-hover:shadow-black/30 group-hover:shadow-lg">
@@ -860,19 +771,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <span className="text-[10px] uppercase tracking-wider opacity-60 font-mono block">
                     Modul
                   </span>
-                  <div
-                    className="hover:opacity-75 cursor-pointer"
-                    onClick={() => onEnterApp("solver")}
-                  >
+                  <div className="hover:opacity-75 cursor-pointer" onClick={() => onEnterApp?.("solver")}>
                     Penyetara Redoks
                   </div>
                   <div className="hover:opacity-75 cursor-pointer" onClick={onOpenPeriodicTable}>
                     Tabel Periodik
                   </div>
-                  <div
-                    className="hover:opacity-75 cursor-pointer"
-                    onClick={() => onEnterApp("scanner")}
-                  >
+                  <div className="hover:opacity-75 cursor-pointer" onClick={() => onEnterApp?.("scanner")}>
                     Scanner Reaksi
                   </div>
                 </div>
@@ -907,9 +812,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <span>© 2026 Chemly. Hak cipta dilindungi undang-undang.</span>
               <span>Konservasi Massa & Muatan Mutlak</span>
             </div>
-          </div>
+          </footer>
         </div>
+
       </div>
     </div>
   );
 };
+
+// Aliaskan export ganda untuk kompatibilitas jika masih ada import singular/plural
+export { LandingPage as LandingPages };

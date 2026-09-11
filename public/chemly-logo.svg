@@ -1,15 +1,22 @@
-<svg viewBox="0 0 490 92" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M 68 25 C 58 13 42 7 26 15 C 9 24 5 44 8 62 C 11 78 28 89 45 86 C 58 83 67 74 72 63" stroke="#000000" stroke-width="11.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <line x1="102" y1="10" x2="102" y2="84" stroke="#000000" stroke-width="11.5" stroke-linecap="square"/>
-  <line x1="162" y1="10" x2="162" y2="84" stroke="#000000" stroke-width="11.5" stroke-linecap="square"/>
-  <path d="M 102 47 C 114 36 126 36 132 47 C 138 58 150 58 162 47" stroke="#000000" stroke-width="10.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <line x1="192" y1="10" x2="192" y2="84" stroke="#000000" stroke-width="11.5" stroke-linecap="square"/>
-  <line x1="192" y1="16" x2="242" y2="16" stroke="#000000" stroke-width="11" stroke-linecap="square"/>
-  <line x1="192" y1="47" x2="236" y2="47" stroke="#000000" stroke-width="10" stroke-linecap="square"/>
-  <line x1="192" y1="78" x2="242" y2="78" stroke="#000000" stroke-width="11" stroke-linecap="square"/>
-  <path d="M 270 84 V 11 L 301 62 L 332 11 V 84" stroke="#000000" stroke-width="11.5" stroke-linecap="square" stroke-linejoin="miter"/>
-  <path d="M 362 10 V 84 H 406" stroke="#000000" stroke-width="11.5" stroke-linecap="square" stroke-linejoin="miter"/>
-  <path d="M 430 10 L 452 46" stroke="#000000" stroke-width="11.5" stroke-linecap="square"/>
-  <path d="M 474 10 L 452 46" stroke="#000000" stroke-width="11.5" stroke-linecap="square"/>
-  <path d="M 452 46 V 67 C 452 79 460 84 472 84" stroke="#000000" stroke-width="11.5" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 240" width="100%" height="100%">
+  <!-- 100% Transparan, Pure Black (#000000), Outlined Vector Paths -->
+  <g fill="#000000">
+    <!-- C -->
+    <path d="M 185 82.5 C 176.5 73.2 165.2 67.5 151.8 67.5 C 125.6 67.5 106.2 87.8 106.2 119.8 C 106.2 151.8 125.6 172.2 151.8 172.2 C 165.2 172.2 176.5 166.5 185 157.2 L 190.8 163.5 C 180.8 174.5 167.5 181.2 151.8 181.2 C 119.8 181.2 96.5 156.2 96.5 119.8 C 96.5 83.5 119.8 58.5 151.8 58.5 C 167.5 58.5 180.8 65.2 190.8 76.2 Z" />
+
+    <!-- H -->
+    <path d="M 238 60 L 247.5 60 L 247.5 115.2 L 314.5 115.2 L 314.5 60 L 324 60 L 324 179.8 L 314.5 179.8 L 314.5 124.2 L 247.5 124.2 L 247.5 179.8 L 238 179.8 Z" />
+
+    <!-- E -->
+    <path d="M 374 60 L 444 60 L 444 69 L 383.5 69 L 383.5 115.5 L 437 115.5 L 437 124.5 L 383.5 124.5 L 383.5 170.8 L 445 170.8 L 445 179.8 L 374 179.8 Z" />
+
+    <!-- M -->
+    <path d="M 495 60 L 506.5 60 L 549 146.8 L 591.5 60 L 603 60 L 603 179.8 L 593.5 179.8 L 593.5 82.5 L 553.2 165.2 L 544.8 165.2 L 504.5 82.5 L 504.5 179.8 L 495 179.8 Z" />
+
+    <!-- L -->
+    <path d="M 656 60 L 665.5 60 L 665.5 170.8 L 725 170.8 L 725 179.8 L 656 179.8 Z" />
+
+    <!-- Y -->
+    <path d="M 771 60 L 814.5 126.8 L 814.5 179.8 L 824 179.8 L 824 126.8 L 867.5 60 L 856.2 60 L 819.2 118.5 L 782.2 60 Z" />
+  </g>
 </svg>

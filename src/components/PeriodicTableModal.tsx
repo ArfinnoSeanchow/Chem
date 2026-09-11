@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   PERIODIC_ELEMENTS,
   PeriodicElement,
@@ -17,13 +17,19 @@ import {
   Zap,
   Info,
   Layers,
-  Sparkles,
-  ChevronRight,
-  Atom,
-  SlidersHorizontal,
   ArrowUpDown,
   Smartphone,
   Table,
+  ChevronDown,
+  Atom,
+  Flame,
+  Radio,
+  Sparkles,
+  Compass,
+  Activity,
+  ShieldAlert,
+  SlidersHorizontal,
+  ExternalLink
 } from "lucide-react";
 import { BohrAtomVisualizer } from "./BohrAtomVisualizer";
 
@@ -33,21 +39,57 @@ interface PeriodicTableModalProps {
   onInsertElement?: (symbol: string) => void;
 }
 
-// Popular redox elements that students and chemists encounter frequently
 const POPULAR_REDOX_ELEMENTS = [
   { symbol: "Mn", name: "Mangan", biloks: "+2, +4, +7", role: "Oksidator Kuat (KMnO₄)" },
-  { symbol: "Fe", name: "Besi", biloks: "+2, +3", role: "Reduktor / Oksidator" },
-  { symbol: "Cr", name: "Kromium", biloks: "+3, +6", role: "Oksidator (K₂Cr₂O₇)" },
-  { symbol: "Cu", name: "Tembaga", biloks: "+1, +2", role: "Reduktor Khas Logam" },
-  { symbol: "I", name: "Iodin", biloks: "-1, 0, +5", role: "Iodometri (I₂ / I⁻ / IO₃⁻)" },
-  { symbol: "Cl", name: "Klorin", biloks: "-1, 0, +1, +5", role: "Autoredoks Gas Cl₂" },
-  { symbol: "S", name: "Belerang", biloks: "-2, +4, +6", role: "Spesi SO₃²⁻, SO₄²⁻, S₂O₃²⁻" },
-  { symbol: "N", name: "Nitrogen", biloks: "-3, +2, +4, +5", role: "Asam Nitrat HNO₃, NO₂" },
-  { symbol: "O", name: "Oksigen", biloks: "-2, -1", role: "H₂O, O₂, Peroksida" },
-  { symbol: "H", name: "Hidrogen", biloks: "+1, 0, -1", role: "Ion H⁺ Penyetara Asam" },
-  { symbol: "Pb", name: "Timbal", biloks: "+2, +4", role: "Aki Timbal Pb / PbO₂" },
+  { symbol: "Fe", name: "Besi", biloks: "+2, +3", role: "Reduktor / Oksidator Khas" },
+  { symbol: "Cr", name: "Kromium", biloks: "+3, +6", role: "Oksidator Asam (K₂Cr₂O₇)" },
+  { symbol: "Cu", name: "Tembaga", biloks: "+1, +2", role: "Pasangan Sel Volta Cu/Zn" },
+  { symbol: "I", name: "Iodin", biloks: "-1, 0, +5", role: "Titrasi Iodometri (I₂ / I⁻)" },
+  { symbol: "Cl", name: "Klorin", biloks: "-1, 0, +1, +5", role: "Disproporsionasi Klor" },
+  { symbol: "S", name: "Belerang", biloks: "-2, +4, +6", role: "Spesi Redoks Tiosulfat" },
+  { symbol: "N", name: "Nitrogen", biloks: "-3, +2, +4, +5", role: "Oksidator Asam Nitrat" },
+  { symbol: "O", name: "Oksigen", biloks: "-2, -1", role: "Spesi Air & Peroksida" },
+  { symbol: "H", name: "Hidrogen", biloks: "+1, 0, -1", role: "Penyetara Muatan Asam (H⁺)" },
+  { symbol: "Pb", name: "Timbal", biloks: "+2, +4", role: "Katoda/Anoda Sel Aki PbO₂" },
   { symbol: "Sn", name: "Timah", biloks: "+2, +4", role: "Reduktor Sn²⁺ → Sn⁴⁺" },
 ];
+
+const BLOCK_THEMES: Record<"s" | "p" | "d" | "f", { 
+  border: string; 
+  badge: string; 
+  accentColor: string;
+  glowEffect: string;
+  radialGradient: string;
+}> = {
+  s: { 
+    border: "border-emerald-500/50 hover:border-emerald-400", 
+    badge: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+    accentColor: "text-emerald-400",
+    glowEffect: "shadow-emerald-500/20",
+    radialGradient: "from-emerald-500/25 via-emerald-600/10 to-transparent"
+  },
+  p: { 
+    border: "border-sky-500/50 hover:border-sky-400", 
+    badge: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+    accentColor: "text-sky-400",
+    glowEffect: "shadow-sky-500/20",
+    radialGradient: "from-sky-500/25 via-sky-600/10 to-transparent"
+  },
+  d: { 
+    border: "border-amber-500/50 hover:border-amber-400", 
+    badge: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+    accentColor: "text-amber-400",
+    glowEffect: "shadow-amber-500/20",
+    radialGradient: "from-amber-500/25 via-amber-600/10 to-transparent"
+  },
+  f: { 
+    border: "border-fuchsia-500/50 hover:border-fuchsia-400", 
+    badge: "bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-500/30",
+    accentColor: "text-fuchsia-400",
+    glowEffect: "shadow-fuchsia-500/20",
+    radialGradient: "from-fuchsia-500/25 via-fuchsia-600/10 to-transparent"
+  },
+};
 
 export const PeriodicTableModal: React.FC<PeriodicTableModalProps> = ({
   isOpen,
@@ -59,42 +101,47 @@ export const PeriodicTableModal: React.FC<PeriodicTableModalProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<ElementCategory | "all">("all");
   const [selectedBlock, setSelectedBlock] = useState<"all" | "s" | "p" | "d" | "f">("all");
   const [sortOrder, setSortOrder] = useState<"number" | "name">("number");
+  
   const [hoveredElement, setHoveredElement] = useState<PeriodicElement | null>(null);
-  const [selectedElement, setSelectedElement] = useState<PeriodicElement | null>(() =>
+  const [selectedElement, setSelectedElement] = useState<PeriodicElement>(() =>
     PERIODIC_ELEMENTS.find((el) => el.symbol === "Mn") || PERIODIC_ELEMENTS[0]
   );
-  const [copied, setCopied] = useState(false);
+
+  const [activeTabHud, setActiveTabHud] = useState<"orbital" | "redox">("orbital");
+  const [copied, setCopied] = useState<string | null>(null);
   const [insertToast, setInsertToast] = useState<string | null>(null);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
-  // Default to "tulisan" (Mode Tulisan Android) on mobile screens, or user toggle
-  const [viewMode, setViewMode] = useState<"tulisan" | "table">(() => {
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      return "tulisan";
-    }
-    return "tulisan"; // Default to tulisan for easier navigation
-  });
+  const [viewMode, setViewMode] = useState<"tulisan" | "table">("table");
 
-  // Mobile drawer inspector open state
-  const [showMobileInspector, setShowMobileInspector] = useState(false);
+  useEffect(() => {
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+    setViewMode(isMobile ? "tulisan" : "table");
+  }, []);
 
-  // Filter elements
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (isOpen) window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   const filteredElements = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const result = PERIODIC_ELEMENTS.filter((el) => {
-      const matchCat =
-        selectedCategory === "all" || el.category === selectedCategory;
-      const matchBlock =
-        selectedBlock === "all" || el.block === selectedBlock;
+      const matchCat = selectedCategory === "all" || el.category === selectedCategory;
+      const matchBlock = selectedBlock === "all" || el.block === selectedBlock;
       if (!matchCat || !matchBlock) return false;
       if (!q) return true;
 
-      const matchSymbol = el.symbol.toLowerCase().includes(q);
-      const matchName = el.name.toLowerCase().includes(q);
-      const matchEn = el.nameEn.toLowerCase().includes(q);
-      const matchNum = el.atomicNumber.toString() === q;
-      const matchVal = el.commonOxidationStates.includes(q);
-
-      return matchSymbol || matchName || matchEn || matchNum || matchVal;
+      return (
+        el.symbol.toLowerCase().includes(q) ||
+        el.name.toLowerCase().includes(q) ||
+        el.nameEn.toLowerCase().includes(q) ||
+        el.atomicNumber.toString() === q ||
+        el.commonOxidationStates.includes(q)
+      );
     });
 
     if (sortOrder === "name") {
@@ -104,30 +151,28 @@ export const PeriodicTableModal: React.FC<PeriodicTableModalProps> = ({
   }, [searchQuery, selectedCategory, selectedBlock, sortOrder]);
 
   const activeInspector = hoveredElement || selectedElement;
+  const currentBlockTheme = BLOCK_THEMES[activeInspector.block];
 
-  const handleCopySymbol = (sym: string) => {
-    navigator.clipboard.writeText(sym);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+  const handleCopyText = (val: string, label: string) => {
+    navigator.clipboard.writeText(val);
+    setCopied(label);
+    setTimeout(() => setCopied(null), 1400);
   };
 
-  const handleInsert = (sym: string) => {
+  const handleExplicitInsert = (sym: string) => {
     if (onInsertElement) {
       onInsertElement(sym);
-      setInsertToast(`Unsur ${sym} disisipkan ke persamaan!`);
+      setInsertToast(`Unsur ${sym} ditambahkan ke persamaan reaksi!`);
       setTimeout(() => setInsertToast(null), 1800);
     }
   };
 
-  // Build 18-col grid map for standard desktop table
   const getGridPosition = (el: PeriodicElement): { row: number; col: number } => {
     if (el.category === "lanthanide") {
-      const offset = el.atomicNumber - 57;
-      return { row: 8, col: 3 + offset };
+      return { row: 8, col: 3 + (el.atomicNumber - 57) };
     }
     if (el.category === "actinide") {
-      const offset = el.atomicNumber - 89;
-      return { row: 9, col: 3 + offset };
+      return { row: 9, col: 3 + (el.atomicNumber - 89) };
     }
     return { row: el.period, col: el.group || 3 };
   };
@@ -136,128 +181,114 @@ export const PeriodicTableModal: React.FC<PeriodicTableModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-hidden font-sans">
-        {/* Backdrop */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden select-none">
+        
+        {/* Ambient Chromatic Backdrop Blur Layer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/85 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/80 backdrop-blur-2xl transition-all"
         />
 
-        {/* Modal Window */}
+        {/* Modal Outer Frame */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.97, y: 8 }}
+          initial={{ opacity: 0, scale: 0.96, y: 14 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.97, y: 8 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
-          className={`relative rounded-2xl w-full max-w-7xl max-h-[96vh] sm:max-h-[92vh] flex flex-col border shadow-2xl overflow-hidden z-10 transition-colors ${
-            isDark
-              ? "bg-[#090A0D] border-zinc-800 text-white"
-              : "bg-white border-zinc-200 text-black"
+          exit={{ opacity: 0, scale: 0.96, y: 14 }}
+          transition={{ type: "spring", damping: 28, stiffness: 360 }}
+          className={`relative w-full max-w-[1460px] h-[96vh] sm:h-[92vh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden z-10 backdrop-blur-3xl transition-colors ${
+            isDark 
+              ? "bg-zinc-950/90 border-zinc-800/90 text-zinc-100 shadow-sky-950/30" 
+              : "bg-white/95 border-zinc-200 text-zinc-900 shadow-zinc-400/30"
           }`}
         >
-          {/* Header */}
-          <div
-            className={`p-3 sm:p-4 border-b flex flex-wrap items-center justify-between gap-3 shrink-0 transition-colors ${
-              isDark ? "bg-zinc-950 border-zinc-800" : "bg-zinc-50 border-zinc-200"
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <div
-                className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold border transition-colors shadow-xs ${
-                  isDark
-                    ? "bg-zinc-900 border-zinc-700 text-sky-400"
-                    : "bg-white border-zinc-300 text-sky-600"
-                }`}
-              >
-                <Layers className="w-4 h-4" />
+          {/* Top Bar Header */}
+          <div className={`px-4 sm:px-6 py-3.5 border-b flex flex-wrap items-center justify-between gap-3 shrink-0 backdrop-blur-xl ${
+            isDark ? "bg-zinc-950/70 border-zinc-800/80" : "bg-white/70 border-zinc-200"
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center border shadow-sm ${
+                isDark 
+                  ? "bg-zinc-900/90 border-zinc-700/70 text-sky-400" 
+                  : "bg-white border-zinc-300 text-sky-600 shadow-xs"
+              }`}>
+                <Layers className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm sm:text-base font-bold tracking-tight">
-                    Tabel Periodik & Unsur Redoks
-                  </h3>
-                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded border bg-sky-500/10 border-sky-500/30 text-sky-400 dark:text-sky-300">
-                    118 Unsur
+                  <h3 className="text-sm sm:text-base font-bold tracking-tight">Katalog Periodik & Reaktivitas Kuantum</h3>
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-400">
+                    118 IUPAC
                   </span>
                 </div>
-                <p className={`text-xs ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
-                  Sentuh kartu unsur untuk memasukkan ke rumus dan melihat analisis orbital elektron.
+                <p className="text-[11px] text-zinc-500 hidden sm:block">
+                  Klik elemen untuk inspeksi orbital & sifat redoks tanpa mengubah rumus yang sedang disusun.
                 </p>
               </div>
             </div>
 
+            {/* View Switcher & Action Controls */}
             <div className="flex items-center gap-2">
-              {/* Responsive Mode Switcher: Mode Tulisan (Android) vs Tabel 18-Kolom */}
-              <div
-                className={`flex items-center p-0.5 rounded-lg border ${
-                  isDark ? "bg-zinc-900 border-zinc-800" : "bg-zinc-200 border-zinc-300"
-                }`}
-              >
+              <div className={`flex items-center p-1 rounded-xl border backdrop-blur-md ${
+                isDark ? "bg-zinc-900/80 border-zinc-800" : "bg-zinc-100 border-zinc-300"
+              }`}>
                 <button
                   type="button"
                   onClick={() => setViewMode("tulisan")}
-                  className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                     viewMode === "tulisan"
-                      ? isDark
-                        ? "bg-white text-black shadow-xs"
-                        : "bg-black text-white shadow-xs"
-                      : "text-zinc-400 hover:text-white"
+                      ? isDark ? "bg-zinc-800 text-white shadow-sm" : "bg-white text-zinc-900 shadow-sm"
+                      : "text-zinc-500 hover:text-zinc-300"
                   }`}
-                  title="Mode Tulisan responsif, mudah dibaca dan disentuh di HP Android"
                 >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>Mode Tulisan (Android)</span>
+                  <Smartphone className="w-3.5 h-3.5 text-sky-400" />
+                  <span className="hidden sm:inline">Kartu Sentuh (HP)</span>
+                  <span className="sm:hidden">Daftar</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setViewMode("table")}
-                  className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                     viewMode === "table"
-                      ? isDark
-                        ? "bg-white text-black shadow-xs"
-                        : "bg-black text-white shadow-xs"
-                      : "text-zinc-400 hover:text-white"
+                      ? isDark ? "bg-zinc-800 text-white shadow-sm" : "bg-white text-zinc-900 shadow-sm"
+                      : "text-zinc-500 hover:text-zinc-300"
                   }`}
-                  title="Tampilan tabel periodik penuh 18-kolom"
                 >
-                  <Table className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Tabel 18-Kolom</span>
-                  <span className="sm:hidden">Tabel</span>
+                  <Table className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="hidden sm:inline">18-Kolom Matriks</span>
+                  <span className="sm:hidden">Matriks</span>
                 </button>
               </div>
 
-              {/* Close Button */}
               <button
                 type="button"
                 onClick={onClose}
-                className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
-                  isDark
-                    ? "border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900"
-                    : "border-zinc-200 text-zinc-600 hover:text-black hover:bg-zinc-100"
+                className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+                  isDark 
+                    ? "border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-white" 
+                    : "border-zinc-200 hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900"
                 }`}
+                title="Tutup (ESC)"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {/* Quick Redox Elements Horizontal Strip (Unsur Populer Redoks) */}
-          <div
-            className={`px-3 py-2 border-b flex items-center gap-2 overflow-x-auto scrollbar-none transition-colors ${
-              isDark ? "bg-zinc-950/80 border-zinc-800/80" : "bg-zinc-100/80 border-zinc-200"
-            }`}
-          >
-            <div className="flex items-center gap-1 text-[11px] font-bold text-sky-400 shrink-0 pr-1">
+          {/* Quick Redox Elements Horizontal Strip */}
+          <div className={`px-4 sm:px-6 py-2 border-b flex items-center gap-2 overflow-x-auto scrollbar-none backdrop-blur-md ${
+            isDark ? "bg-zinc-900/20 border-zinc-800/80" : "bg-zinc-50/50 border-zinc-200"
+          }`}>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400 shrink-0 flex items-center gap-1 pr-1">
               <Zap className="w-3.5 h-3.5" />
-              <span>Unsur Redoks Populer:</span>
-            </div>
+              Unsur Redoks Kunci:
+            </span>
             {POPULAR_REDOX_ELEMENTS.map((item) => {
               const el = PERIODIC_ELEMENTS.find((p) => p.symbol === item.symbol);
-              const isSelected = selectedElement?.symbol === item.symbol;
+              const isInspected = activeInspector.symbol === item.symbol;
               return (
                 <button
                   key={item.symbol}
@@ -265,31 +296,25 @@ export const PeriodicTableModal: React.FC<PeriodicTableModalProps> = ({
                   onClick={() => {
                     if (el) {
                       setSelectedElement(el);
-                      setShowMobileInspector(true);
+                      if (window.innerWidth < 1024) setMobileDrawerOpen(true);
                     }
                   }}
-                  className={`px-2 py-1 rounded-lg border text-xs font-mono font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                    isSelected
+                  className={`px-2.5 py-1 rounded-lg border text-xs font-mono font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                    isInspected
                       ? isDark
-                        ? "bg-sky-500 text-black border-sky-400 shadow-xs"
-                        : "bg-sky-600 text-white border-sky-600 shadow-xs"
+                        ? "bg-sky-500 text-black border-sky-400 shadow-md shadow-sky-500/20 ring-1 ring-sky-300"
+                        : "bg-sky-600 text-white border-sky-600 shadow-md"
                       : isDark
-                      ? "bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700"
-                      : "bg-white border-zinc-300 text-zinc-800 hover:text-black hover:border-zinc-400"
+                      ? "bg-zinc-900/60 border-zinc-800 text-zinc-300 hover:border-sky-500/50 hover:text-white"
+                      : "bg-white border-zinc-300 text-zinc-700 hover:border-sky-500/50"
                   }`}
-                  title={`${item.name} (${item.role})`}
+                  title={`${item.name} • ${item.role}`}
                 >
                   <span className="text-sm">{item.symbol}</span>
-                  <span className="text-[10px] opacity-70 font-sans font-medium hidden sm:inline">
-                    {item.name}
-                  </span>
-                  <span
-                    className={`text-[9px] px-1 rounded ${
-                      isSelected
-                        ? "bg-black/20 text-current"
-                        : "bg-sky-500/15 text-sky-400"
-                    }`}
-                  >
+                  <span className="text-[10px] opacity-70 hidden sm:inline font-sans font-medium">{item.name}</span>
+                  <span className={`text-[9px] px-1 rounded ${
+                    isInspected ? "bg-black/20 text-current" : "bg-amber-500/15 text-amber-400"
+                  }`}>
                     {item.biloks.split(",")[0]}
                   </span>
                 </button>
@@ -297,142 +322,129 @@ export const PeriodicTableModal: React.FC<PeriodicTableModalProps> = ({
             })}
           </div>
 
-          {/* Filter & Search Toolbar */}
-          <div
-            className={`p-3 border-b flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 shrink-0 transition-colors ${
-              isDark ? "bg-black/60 border-zinc-800" : "bg-white border-zinc-200"
-            }`}
-          >
-            {/* Search Input */}
+          {/* Filters & Dynamic Query Strip */}
+          <div className={`p-3 sm:px-6 border-b flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 ${
+            isDark ? "bg-zinc-950/60 border-zinc-800" : "bg-white/60 border-zinc-200"
+          }`}>
             <div className="relative flex-1 max-w-md">
-              <Search
-                className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${
-                  isDark ? "text-zinc-500" : "text-zinc-400"
-                }`}
-              />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari simbol, nama, atau nomor atom (cth: Mn, Besi, 25, +7)..."
-                className={`w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border transition-colors focus:outline-none ${
-                  isDark
-                    ? "bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600 focus:border-sky-400"
-                    : "bg-zinc-50 border-zinc-300 text-black placeholder:text-zinc-400 focus:border-sky-500"
+                placeholder="Cari simbol, nama, nomor atom (cth: Mn, Besi, 25, +7)..."
+                className={`w-full pl-9 pr-8 py-1.5 text-xs rounded-xl border transition-all focus:outline-none ${
+                  isDark 
+                    ? "bg-zinc-900/70 border-zinc-800 text-white placeholder:text-zinc-500 focus:border-sky-500/60 focus:ring-2 focus:ring-sky-500/20" 
+                    : "bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-sky-500"
                 }`}
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-zinc-400 hover:text-white"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
 
-            {/* Block & Category Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 scrollbar-none text-xs">
-              {/* Sort Order Toggle */}
+            {/* Filter Pills with Orbital Categories */}
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none text-xs">
               <button
                 type="button"
-                onClick={() => setSortOrder((prev) => (prev === "number" ? "name" : "number"))}
-                className={`px-2 py-1 rounded-md text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer border flex items-center gap-1 ${
-                  isDark
-                    ? "bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white"
-                    : "bg-zinc-100 border-zinc-300 text-zinc-700 hover:text-black"
+                onClick={() => setSortOrder((p) => (p === "number" ? "name" : "number"))}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
+                  isDark ? "bg-zinc-900/80 border-zinc-800 text-zinc-300 hover:text-white" : "bg-zinc-100 border-zinc-300 text-zinc-700 hover:text-black"
                 }`}
-                title="Ubah Urutan"
               >
                 <ArrowUpDown className="w-3 h-3 text-sky-400" />
-                <span>{sortOrder === "number" ? "Urut No. Atom" : "Urut Nama A-Z"}</span>
+                <span>{sortOrder === "number" ? "No. Atom" : "A-Z"}</span>
               </button>
 
-              {/* Block Filter */}
-              <div className="flex items-center gap-0.5 border-l pl-1.5 border-zinc-700/50">
-                {(["all", "s", "p", "d", "f"] as const).map((blk) => (
-                  <button
-                    key={blk}
-                    type="button"
-                    onClick={() => setSelectedBlock(blk)}
-                    className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold transition-colors cursor-pointer border ${
-                      selectedBlock === blk
-                        ? isDark
-                          ? "bg-sky-400 text-black border-sky-400 font-bold"
-                          : "bg-sky-600 text-white border-sky-600 font-bold"
-                        : isDark
-                        ? "bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white"
-                        : "bg-zinc-100 border-zinc-200 text-zinc-600 hover:text-black"
-                    }`}
-                  >
-                    {blk === "all" ? "Semua Blok" : `Blok-${blk}`}
-                  </button>
-                ))}
+              <div className="flex items-center gap-1 border-l pl-2 border-zinc-800">
+                {(["all", "s", "p", "d", "f"] as const).map((blk) => {
+                  const isSelected = selectedBlock === blk;
+                  return (
+                    <button
+                      key={blk}
+                      type="button"
+                      onClick={() => setSelectedBlock(blk)}
+                      className={`px-2.5 py-0.5 rounded-md text-[11px] font-mono uppercase font-bold transition-all cursor-pointer border ${
+                        isSelected
+                          ? blk === "all"
+                            ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
+                            : BLOCK_THEMES[blk].badge
+                          : isDark ? "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-white" : "bg-zinc-100 border-zinc-200 text-zinc-600 hover:text-black"
+                      }`}
+                    >
+                      {blk === "all" ? "Semua" : `Blok-${blk}`}
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* Category Pills */}
-              <button
-                type="button"
-                onClick={() => setSelectedCategory("all")}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer border ${
-                  selectedCategory === "all"
-                    ? isDark
-                      ? "bg-white text-black border-white font-bold"
-                      : "bg-black text-white border-black font-bold"
-                    : isDark
-                    ? "bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white"
-                    : "bg-zinc-100 border-zinc-200 text-zinc-600 hover:text-black"
-                }`}
-              >
-                Semua Kategori ({PERIODIC_ELEMENTS.length})
-              </button>
-              {(Object.keys(CATEGORY_LABELS) as ElementCategory[]).map((cat) => {
-                const labelObj = CATEGORY_LABELS[cat];
-                const isSelected = selectedCategory === cat;
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-2 py-1 rounded-md text-[11px] font-semibold whitespace-nowrap transition-all cursor-pointer border ${
-                      isSelected
-                        ? isDark
-                          ? "bg-sky-400 text-black border-sky-400 font-bold"
-                          : "bg-sky-600 text-white border-sky-600 font-bold"
-                        : isDark
-                        ? "bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white"
-                        : "bg-zinc-100 border-zinc-200 text-zinc-600 hover:text-black"
-                    }`}
-                  >
-                    {labelObj.label}
-                  </button>
-                );
-              })}
+              <div className="flex items-center gap-1 border-l pl-2 border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory("all")}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border ${
+                    selectedCategory === "all"
+                      ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
+                      : isDark ? "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-white" : "bg-zinc-100 border-zinc-300 text-zinc-600 hover:text-black"
+                  }`}
+                >
+                  Semua ({PERIODIC_ELEMENTS.length})
+                </button>
+                {(Object.keys(CATEGORY_LABELS) as ElementCategory[]).map((cat) => {
+                  const catMeta = CATEGORY_LABELS[cat];
+                  const isSelected = selectedCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-2 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer border ${
+                        isSelected
+                          ? isDark
+                            ? `${catMeta.bgDark} ring-2 ring-sky-400/50 border-sky-400`
+                            : `${catMeta.bgLight} ring-2 ring-sky-600/50 border-sky-600`
+                          : isDark
+                          ? "bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:text-white"
+                          : "bg-zinc-100 border-zinc-200 text-zinc-600 hover:text-black"
+                      }`}
+                    >
+                      {catMeta.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          {/* Main Content Area */}
+          {/* Main Content Workspace */}
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-            {/* View 1: MODE TULISAN / KARTU ANDROID (Designed for phone touch and readability) */}
+            
+            {/* VIEW 1: MODE TULISAN / HP ANDROID TOUCH CARDS */}
             {viewMode === "tulisan" && (
-              <div className="flex-1 p-3 overflow-y-auto">
+              <div className="flex-1 p-3 sm:p-4 overflow-y-auto overscroll-contain">
                 <div className="max-w-4xl mx-auto space-y-2.5">
                   <div className="flex items-center justify-between text-xs text-zinc-400 px-1">
                     <span>
-                      Menampilkan <strong className="text-sky-400">{filteredElements.length}</strong> unsur kimia (tulisan format kartu sentuh):
+                      Ditemukan <strong className="text-sky-400">{filteredElements.length}</strong> unsur:
                     </span>
-                    <span className="text-[11px] font-mono">
-                      Klik <strong className="text-white">+ Sisipkan</strong> untuk langsung masukkan ke rumus
+                    <span className="text-[11px] font-mono text-zinc-500">
+                      Tap kartu untuk inspeksi data lengkap
                     </span>
                   </div>
 
-                  {/* Vertical / 2-Column Responsive Element Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {filteredElements.map((el) => {
-                      const isSelected = selectedElement?.symbol === el.symbol;
+                      const isInspected = activeInspector.symbol === el.symbol;
                       const catInfo = CATEGORY_LABELS[el.category];
                       const biloksList = el.commonOxidationStates.split(",").map((s) => s.trim());
+                      const blockTheme = BLOCK_THEMES[el.block];
 
                       return (
                         <motion.div
@@ -440,58 +452,52 @@ export const PeriodicTableModal: React.FC<PeriodicTableModalProps> = ({
                           whileHover={{ y: -2 }}
                           onClick={() => {
                             setSelectedElement(el);
-                            setShowMobileInspector(true);
+                            setMobileDrawerOpen(true);
                           }}
-                          className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2.5 relative overflow-hidden ${
-                            isSelected
+                          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 relative overflow-hidden backdrop-blur-md ${
+                            isInspected
                               ? isDark
-                                ? "bg-sky-950/40 border-sky-400 shadow-md ring-1 ring-sky-400/40"
-                                : "bg-sky-50 border-sky-500 shadow-md ring-1 ring-sky-500/40"
+                                ? "bg-zinc-900/90 border-sky-400/90 shadow-xl shadow-sky-500/10 ring-2 ring-sky-400/30"
+                                : "bg-sky-50/80 border-sky-500 shadow-md ring-2 ring-sky-500/30"
                               : isDark
-                              ? "bg-zinc-950/80 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900/60"
-                              : "bg-zinc-50 border-zinc-200 hover:border-zinc-300 hover:bg-white"
+                              ? "bg-zinc-950/60 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900/50"
+                              : "bg-white/80 border-zinc-200 hover:border-zinc-300"
                           }`}
                         >
-                          {/* Top row: Symbol, Name, Category */}
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-3">
-                              {/* Prominent Atomic Symbol */}
-                              <div
-                                className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center font-mono font-extrabold border transition-all ${
-                                  isSelected
-                                    ? "bg-sky-500 text-black border-sky-400 shadow-xs"
-                                    : isDark
-                                    ? "bg-zinc-900 border-zinc-750 text-sky-400"
-                                    : "bg-white border-zinc-300 text-sky-600 shadow-xs"
-                                }`}
-                              >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center font-mono font-black border shrink-0 transition-transform ${
+                                isInspected
+                                  ? isDark ? "bg-sky-500 text-black border-sky-400 shadow-md" : "bg-sky-600 text-white border-sky-600"
+                                  : isDark ? "bg-zinc-900 border-zinc-800 text-sky-400" : "bg-zinc-100 border-zinc-300 text-sky-600"
+                              }`}>
                                 <span className="text-lg leading-none">{el.symbol}</span>
                                 <span className="text-[9px] opacity-70 mt-0.5">#{el.atomicNumber}</span>
                               </div>
 
-                              <div>
-                                <div className="flex items-center gap-1.5">
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5 truncate">
                                   <h4 className="font-bold text-sm leading-tight">{el.name}</h4>
-                                  <span className="text-[10px] font-mono opacity-60">({el.nameEn})</span>
+                                  <span className="text-[10px] font-mono opacity-50">({el.nameEn})</span>
                                 </div>
-                                <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
-                                  Massa: {el.atomicMass} u • Blok-{el.block}
+                                <div className="text-[11px] text-zinc-400 font-mono mt-0.5 flex items-center gap-2">
+                                  <span>{el.atomicMass} u</span>
+                                  <span>•</span>
+                                  <span className={`px-1.5 py-0.2 rounded font-bold text-[10px] border ${blockTheme.badge}`}>
+                                    blok-{el.block}
+                                  </span>
                                 </div>
                               </div>
                             </div>
 
-                            {/* Category Pill */}
-                            <span
-                              className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border shrink-0 ${
-                                isDark ? catInfo.bgDark : catInfo.bgLight
-                              }`}
-                            >
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border shrink-0 ${
+                              isDark ? catInfo.bgDark : catInfo.bgLight
+                            }`}>
                               {catInfo.label}
                             </span>
                           </div>
 
-                          {/* Middle row: Biloks & Electron Config */}
-                          <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1 border-t border-zinc-800/40 text-xs">
+                          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-zinc-800/50 text-xs">
                             <div className="flex items-center gap-1">
                               <span className="text-[10px] text-zinc-400 font-medium">Biloks:</span>
                               <div className="flex flex-wrap gap-1">
@@ -517,22 +523,22 @@ export const PeriodicTableModal: React.FC<PeriodicTableModalProps> = ({
                             </span>
                           </div>
 
-                          {/* Bottom Action Buttons: Sisipkan & Detail */}
+                          {/* Detail & Explicit Insert */}
                           <div className="flex items-center gap-2 pt-1">
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleInsert(el.symbol);
+                                handleExplicitInsert(el.symbol);
                               }}
-                              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border ${
+                              className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border ${
                                 isDark
-                                  ? "bg-sky-500/15 hover:bg-sky-500/25 border-sky-500/40 text-sky-300"
+                                  ? "bg-sky-500/15 hover:bg-sky-500/25 border-sky-500/30 text-sky-300"
                                   : "bg-sky-50 hover:bg-sky-100 border-sky-300 text-sky-700"
                               }`}
                             >
                               <Plus className="w-3.5 h-3.5" />
-                              <span>+ Sisipkan {el.symbol}</span>
+                              <span>+ Masukkan ke Reaksi</span>
                             </button>
 
                             <button
@@ -540,16 +546,16 @@ export const PeriodicTableModal: React.FC<PeriodicTableModalProps> = ({
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedElement(el);
-                                setShowMobileInspector(true);
+                                setMobileDrawerOpen(true);
                               }}
-                              className={`py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer border ${
+                              className={`py-1.5 px-3 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer border ${
                                 isDark
                                   ? "bg-zinc-900 hover:bg-zinc-800 border-zinc-800 text-zinc-300"
                                   : "bg-zinc-100 hover:bg-zinc-200 border-zinc-300 text-zinc-700"
                               }`}
                             >
                               <Info className="w-3.5 h-3.5" />
-                              <span>Detail</span>
+                              <span>Inspeksi</span>
                             </button>
                           </div>
                         </motion.div>
@@ -560,307 +566,473 @@ export const PeriodicTableModal: React.FC<PeriodicTableModalProps> = ({
               </div>
             )}
 
-            {/* View 2: STANDARD 18-COLUMN TABLE (Desktop & Advanced View) */}
+            {/* VIEW 2: 18-COLUMN PERIODIC MATRIX (Desktop High-Performance Grid) */}
             {viewMode === "table" && (
-              <div
-                className={`flex-1 p-3 overflow-auto transition-all ${
-                  hoveredElement ? "table-has-hover" : ""
-                }`}
-              >
-                <div className="min-w-[760px] pb-2">
+              <div className="flex-1 p-4 overflow-auto overscroll-contain relative">
+                <div className="min-w-[880px] pb-4">
                   <div
-                    className="grid auto-rows-fr relative gap-1"
-                    style={{ gridTemplateColumns: "repeat(18, minmax(38px, 1fr))" }}
+                    className="grid auto-rows-fr relative gap-1 select-none"
+                    style={{
+                      gridTemplateColumns: "repeat(18, minmax(46px, 1fr))",
+                      transform: "translateZ(0)",
+                    }}
                   >
                     {PERIODIC_ELEMENTS.map((el) => {
                       const pos = getGridPosition(el);
+                      const isInspected = activeInspector.symbol === el.symbol;
                       const isHovered = hoveredElement?.symbol === el.symbol;
-                      const isSelected = selectedElement?.symbol === el.symbol;
-                      const isMatchesSearch =
-                        !searchQuery ||
-                        filteredElements.some((f) => f.symbol === el.symbol);
-                      const isBlurred =
-                        hoveredElement && hoveredElement.symbol !== el.symbol;
+                      const isMatchesFilter = !searchQuery || filteredElements.some((f) => f.symbol === el.symbol);
+                      const isCategoryDimmed = hoveredElement && hoveredElement.category !== el.category;
+                      const catMeta = CATEGORY_LABELS[el.category];
+                      const blockTheme = BLOCK_THEMES[el.block];
 
                       return (
-                        <motion.div
+                        <div
                           key={el.symbol}
                           style={{ gridRow: pos.row, gridColumn: pos.col }}
                           onMouseEnter={() => setHoveredElement(el)}
                           onMouseLeave={() => setHoveredElement(null)}
                           onClick={() => {
+                            // HANYA SELECT UNTUK INSPEKSI (TIDAK OTOMATIS INSERT)
                             setSelectedElement(el);
-                            handleInsert(el.symbol);
                           }}
-                          className={`relative aspect-square rounded-md border flex flex-col justify-between p-1 cursor-pointer transition-all select-none ${
-                            isSelected
+                          className={`relative aspect-square rounded-xl border p-1 flex flex-col justify-between cursor-pointer transition-all duration-150 backdrop-blur-md ${
+                            isInspected
                               ? isDark
-                                ? "bg-sky-500 text-black border-sky-300 ring-2 ring-sky-400 font-bold z-20 shadow-lg scale-105"
-                                : "bg-sky-600 text-white border-sky-400 ring-2 ring-sky-500 font-bold z-20 shadow-lg scale-105"
+                                ? "bg-white text-black border-white font-extrabold z-20 shadow-2xl scale-105 ring-2 ring-sky-400"
+                                : "bg-black text-white border-black font-extrabold z-20 shadow-2xl scale-105 ring-2 ring-sky-500"
                               : isHovered
                               ? isDark
-                                ? "bg-zinc-800 text-white border-sky-400 scale-110 z-30 shadow-xl"
-                                : "bg-zinc-200 text-black border-sky-500 scale-110 z-30 shadow-xl"
-                              : isMatchesSearch
+                                ? "bg-zinc-800/90 border-sky-400 text-white z-30 shadow-2xl scale-110 ring-1 ring-sky-400/50"
+                                : "bg-zinc-100 border-sky-500 text-black z-30 shadow-2xl scale-110 ring-1 ring-sky-500/50"
+                              : isMatchesFilter
                               ? isDark
-                                ? `${CATEGORY_LABELS[el.category].bgDark} hover:border-sky-400`
-                                : `${CATEGORY_LABELS[el.category].bgLight} hover:border-sky-500`
-                              : isDark
-                              ? "bg-zinc-950/40 border-zinc-900 text-zinc-600 opacity-25"
-                              : "bg-zinc-100/50 border-zinc-200 text-zinc-400 opacity-25"
-                          } ${isBlurred && !isHovered ? "opacity-35" : ""}`}
+                                ? `${catMeta.bgDark} ${blockTheme.border} hover:scale-105`
+                                : `${catMeta.bgLight} ${blockTheme.border} hover:scale-105`
+                              : "opacity-15 border-transparent bg-transparent pointer-events-none"
+                          } ${isCategoryDimmed && !isHovered ? "opacity-20 filter grayscale" : ""}`}
                         >
                           <div className="flex items-center justify-between text-[8px] font-mono leading-none">
-                            <span>{el.atomicNumber}</span>
-                            <span className="opacity-70 text-[7px]">{el.block}</span>
+                            <span className="opacity-70 font-semibold">{el.atomicNumber}</span>
+                            <span className="opacity-50 text-[7px] uppercase">{el.block}</span>
                           </div>
-                          <div className="text-center font-bold font-mono text-xs leading-none">
+
+                          <div className="text-center font-black font-mono text-sm leading-none tracking-tight">
                             {el.symbol}
                           </div>
-                          <div className="text-[7px] text-center font-medium truncate leading-none">
+
+                          <div className="text-[7px] text-center font-medium truncate opacity-80 leading-none">
                             {el.name}
                           </div>
-                        </motion.div>
+                        </div>
                       );
                     })}
 
-                    {/* Placeholders for Lanthanides & Actinides */}
+                    {/* Series Indicators */}
                     <div
                       style={{ gridRow: 6, gridColumn: 3 }}
-                      className={`rounded-md border font-mono font-bold flex flex-col items-center justify-center text-center p-1 text-[9px] ${
-                        isDark
-                          ? "bg-emerald-950/20 border-emerald-800/40 text-emerald-300"
-                          : "bg-emerald-50 border-emerald-200 text-emerald-800"
-                      }`}
+                      className="rounded-xl border border-dashed border-fuchsia-500/50 bg-fuchsia-500/10 flex flex-col items-center justify-center font-mono text-[9px] text-fuchsia-400"
                     >
-                      <span>57-71</span>
-                      <span className="text-[6px]">La</span>
+                      <span className="font-bold">57-71</span>
+                      <span className="text-[7px]">La-Lu</span>
                     </div>
-
                     <div
                       style={{ gridRow: 7, gridColumn: 3 }}
-                      className={`rounded-md border font-mono font-bold flex flex-col items-center justify-center text-center p-1 text-[9px] ${
-                        isDark
-                          ? "bg-red-950/20 border-red-800/40 text-red-300"
-                          : "bg-red-50 border-red-200 text-red-800"
-                      }`}
+                      className="rounded-xl border border-dashed border-rose-500/50 bg-rose-500/10 flex flex-col items-center justify-center font-mono text-[9px] text-rose-400"
                     >
-                      <span>89-103</span>
-                      <span className="text-[6px]">Ac</span>
+                      <span className="font-bold">89-103</span>
+                      <span className="text-[7px]">Ac-Lr</span>
                     </div>
                   </div>
 
-                  {/* Legend */}
-                  <div className="mt-2.5 pt-2 border-t border-zinc-800/60 flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-400">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-zinc-300">Deret f:</span>
-                      <span>Lantanida (57-71)</span>
-                      <span>•</span>
-                      <span>Aktinida (89-103)</span>
+                  {/* Footnote Guide */}
+                  <div className="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1.5 font-bold text-emerald-400">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400" /> Blok-s
+                      </span>
+                      <span className="flex items-center gap-1.5 font-bold text-sky-400">
+                        <span className="w-2 h-2 rounded-full bg-sky-400" /> Blok-p
+                      </span>
+                      <span className="flex items-center gap-1.5 font-bold text-amber-400">
+                        <span className="w-2 h-2 rounded-full bg-amber-400" /> Blok-d
+                      </span>
+                      <span className="flex items-center gap-1.5 font-bold text-fuchsia-400">
+                        <span className="w-2 h-2 rounded-full bg-fuchsia-400" /> Blok-f
+                      </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-sky-400 font-mono">
-                      <Zap className="w-3 h-3" />
-                      <span>Klik unsur untuk memasukkan ke rumus</span>
-                    </div>
+                    <span className="flex items-center gap-1 text-sky-400">
+                      <Sparkles className="w-3 h-3" />
+                      Klik unsur untuk melihat spek lengkap di HUD kanan
+                    </span>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Element Inspector Panel / HUD */}
-            <div
-              className={`w-full lg:w-84 shrink-0 border-t lg:border-t-0 lg:border-l p-4 flex flex-col justify-between overflow-y-auto transition-colors ${
-                isDark ? "bg-zinc-950/95 border-zinc-800" : "bg-zinc-50 border-zinc-200"
-              }`}
-            >
-              {activeInspector ? (
-                <div className="space-y-3.5">
-                  {/* Big Card Header with Bohr Visualizer */}
-                  <div
-                    className={`p-3.5 rounded-xl border flex flex-col items-center relative overflow-hidden transition-all ${
-                      isDark
-                        ? "bg-black border-zinc-800 shadow-inner"
-                        : "bg-white border-zinc-300 shadow-xs"
-                    }`}
-                  >
-                    {/* Animated Bohr Atom Visualizer */}
+            {/* UPGRADED COMMAND CENTER HUD (Right Lateral Dynamic Workspace) */}
+            <div className={`hidden lg:flex w-[400px] shrink-0 border-l p-5 flex-col justify-between overflow-y-auto backdrop-blur-2xl relative ${
+              isDark ? "bg-zinc-950/80 border-zinc-800" : "bg-zinc-50/80 border-zinc-200"
+            }`}>
+              
+              {/* Dynamic Atmospheric Glow Background based on inspected element block */}
+              <div className="absolute -right-20 top-20 w-72 h-72 rounded-full pointer-events-none opacity-20 blur-3xl transition-all duration-700 bg-gradient-to-tr from-sky-500 to-emerald-400" />
+
+              <div className="space-y-4 relative z-10">
+                
+                {/* 3D Visualizer Chamber with Gyroscopic Kinetic Rings */}
+                <div className={`p-4 rounded-2xl border flex flex-col items-center relative overflow-hidden backdrop-blur-xl ${
+                  isDark ? "bg-black/50 border-zinc-800/90 shadow-2xl" : "bg-white/80 border-zinc-200 shadow-sm"
+                }`}>
+                  {/* Subtle Background Radial Aura */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 32, repeat: Infinity, ease: "linear" }}
+                      className={`w-64 h-64 rounded-full bg-gradient-to-tr ${currentBlockTheme.radialGradient} blur-2xl`}
+                    />
+                  </div>
+
+                  {/* Header HUD Tracker Strip */}
+                  <div className="w-full flex items-center justify-between text-[10px] font-mono text-zinc-500 mb-2 relative z-10">
+                    <span className="flex items-center gap-1.5 font-bold text-zinc-400">
+                      <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
+                      MODEL BOHR KUANTUM
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full border border-zinc-800 bg-zinc-900/80 text-zinc-300 font-mono">
+                      Z = {activeInspector.atomicNumber}
+                    </span>
+                  </div>
+
+                  {/* Bohr Atom Centerpiece */}
+                  <div className="relative z-10 py-1 flex items-center justify-center">
                     <BohrAtomVisualizer
                       atomicNumber={activeInspector.atomicNumber}
                       symbol={activeInspector.symbol}
-                      size={130}
+                      size={145}
                       className="mb-1"
                     />
-
-                    <div className="w-full flex items-center justify-between pt-2 border-t border-zinc-800/40">
-                      <div>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-xl font-bold font-mono text-sky-400">
-                            {activeInspector.symbol}
-                          </span>
-                          <span className="text-xs font-mono opacity-60">
-                            Z = {activeInspector.atomicNumber}
-                          </span>
-                        </div>
-                        <h4 className="text-xs font-bold leading-tight">
-                          {activeInspector.name} ({activeInspector.nameEn})
-                        </h4>
-                      </div>
-
-                      <div className="text-right">
-                        <span
-                          className={`text-[9px] font-semibold px-2 py-0.5 rounded-full border ${
-                            CATEGORY_LABELS[activeInspector.category].bgDark
-                          }`}
-                        >
-                          {CATEGORY_LABELS[activeInspector.category].label}
-                        </span>
-                        <div className="text-[9px] font-mono mt-0.5 opacity-70">
-                          {activeInspector.atomicMass} u
-                        </div>
-                      </div>
-                    </div>
                   </div>
 
-                  {/* Valensi & Bilangan Oksidasi */}
-                  <div
-                    className={`p-3 rounded-lg border transition-colors ${
-                      isDark ? "bg-zinc-900/60 border-zinc-800" : "bg-white border-zinc-200"
-                    }`}
-                  >
-                    <div className="text-[10px] uppercase font-bold tracking-wider mb-1.5 flex items-center justify-between">
-                      <span className={isDark ? "text-zinc-400" : "text-zinc-500"}>
-                        Bilangan Oksidasi Populer:
-                      </span>
-                      <span className="text-sky-400 text-[10px] font-mono font-bold flex items-center gap-1">
-                        <Zap className="w-3 h-3" />
-                        Status Redoks
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      {activeInspector.commonOxidationStates.split(",").map((s) => {
-                        const trimmed = s.trim();
-                        return (
-                          <span
-                            key={trimmed}
-                            className="px-2 py-0.5 rounded text-xs font-mono font-bold border bg-sky-500/10 border-sky-500/30 text-sky-400 dark:text-sky-300"
-                          >
-                            <Latex math={trimmed} />
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Konfigurasi Elektron & Sifat Fisik */}
-                  <div
-                    className={`p-3 rounded-lg border text-xs space-y-1.5 ${
-                      isDark ? "bg-zinc-900/60 border-zinc-800" : "bg-white border-zinc-200"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className={`text-[11px] ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
-                        Konfigurasi Elektron:
-                      </span>
-                      <span className="font-mono font-semibold">
-                        {activeInspector.electronConfiguration}
-                      </span>
-                    </div>
-                    {activeInspector.electronegativity && (
-                      <div className="flex items-center justify-between">
-                        <span className={`text-[11px] ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
-                          Elektronegativitas (Pauling):
+                  {/* Identification Footnote */}
+                  <div className="w-full flex items-end justify-between pt-3 border-t border-zinc-800/80 relative z-10">
+                    <div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-black font-mono text-sky-400 tracking-tight">
+                          {activeInspector.symbol}
                         </span>
-                        <span className="font-mono font-semibold">
-                          {activeInspector.electronegativity}
+                        <span className="text-xs font-bold text-zinc-200">
+                          {activeInspector.name}
                         </span>
                       </div>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <span className={`text-[11px] ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
-                        Blok Orbital & Periode:
-                      </span>
-                      <span className="font-mono font-bold uppercase text-sky-400">
-                        Blok-{activeInspector.block} • Periode {activeInspector.period}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Deskripsi & Peran Redoks */}
-                  <div
-                    className={`p-3 rounded-lg border text-xs leading-relaxed space-y-2 ${
-                      isDark ? "bg-zinc-900/40 border-zinc-800" : "bg-white border-zinc-200"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 font-bold text-[11px] text-zinc-300">
-                      <Info className="w-3.5 h-3.5 text-sky-400" />
-                      Peran Kimia & Reaksi:
-                    </div>
-                    <p className={`text-[11px] leading-relaxed ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>
-                      {activeInspector.description}
-                    </p>
-                    {activeInspector.redoxRole && (
-                      <div className="pt-1 text-[11px] border-t border-zinc-800/60 font-mono text-sky-400 dark:text-sky-300">
-                        {activeInspector.redoxRole}
+                      <div className="text-[10px] font-mono text-zinc-500">
+                        {activeInspector.nameEn} • Golongan {activeInspector.group ?? "—"} • Periode {activeInspector.period}
                       </div>
-                    )}
+                    </div>
+
+                    <div className="text-right">
+                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                        isDark ? CATEGORY_LABELS[activeInspector.category].bgDark : CATEGORY_LABELS[activeInspector.category].bgLight
+                      }`}>
+                        {CATEGORY_LABELS[activeInspector.category].label}
+                      </span>
+                      <div className="text-[10px] font-mono mt-1 text-zinc-400 font-bold">
+                        {activeInspector.atomicMass} u
+                      </div>
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center text-zinc-400 text-xs">
-                  <Layers className="w-8 h-8 mb-2 opacity-40 text-sky-400" />
-                  Pilih unsur apapun untuk melihat animasi orbital dan sifat redoksnya.
-                </div>
-              )}
 
-              {/* Action Buttons */}
-              {activeInspector && (
-                <div className="mt-3 pt-3 border-t border-zinc-800 flex gap-2">
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    type="button"
-                    onClick={() => handleInsert(activeInspector.symbol)}
-                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer border transition-colors ${
-                      isDark
-                        ? "bg-white text-black hover:bg-zinc-200 border-white shadow-xs"
-                        : "bg-black text-white hover:bg-zinc-800 border-black shadow-xs"
-                    }`}
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Sisipkan {activeInspector.symbol}</span>
-                  </motion.button>
-
+                {/* Sub-Tabs: Orbital Spec vs Redox Mechanics */}
+                <div className={`flex items-center p-1 rounded-xl border text-xs font-semibold ${
+                  isDark ? "bg-zinc-900/60 border-zinc-800" : "bg-zinc-100 border-zinc-200"
+                }`}>
                   <button
                     type="button"
-                    onClick={() => handleCopySymbol(activeInspector.symbol)}
-                    className={`p-2 rounded-lg border text-xs font-semibold flex items-center justify-center cursor-pointer transition-colors ${
-                      isDark
-                        ? "bg-zinc-900 border-zinc-700 text-zinc-300 hover:text-white"
-                        : "bg-zinc-100 border-zinc-300 text-zinc-700 hover:text-black"
+                    onClick={() => setActiveTabHud("orbital")}
+                    className={`flex-1 py-1 rounded-lg transition-all text-center cursor-pointer ${
+                      activeTabHud === "orbital"
+                        ? isDark ? "bg-zinc-800 text-white shadow-sm" : "bg-white text-zinc-900 shadow-sm"
+                        : "text-zinc-500 hover:text-zinc-300"
                     }`}
-                    title="Salin Simbol"
                   >
-                    {copied ? (
-                      <Check className="w-4 h-4 text-emerald-400" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
+                    Spek Orbital & Kuantum
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTabHud("redox")}
+                    className={`flex-1 py-1 rounded-lg transition-all text-center cursor-pointer ${
+                      activeTabHud === "redox"
+                        ? isDark ? "bg-zinc-800 text-white shadow-sm" : "bg-white text-zinc-900 shadow-sm"
+                        : "text-zinc-500 hover:text-zinc-300"
+                    }`}
+                  >
+                    Reaktivitas & Redoks
                   </button>
                 </div>
-              )}
+
+                <AnimatePresence mode="wait">
+                  {activeTabHud === "orbital" ? (
+                    <motion.div
+                      key="orbital"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.15 }}
+                      className="space-y-3"
+                    >
+                      {/* Grid Specs */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className={`p-2.5 rounded-xl border text-xs ${
+                          isDark ? "bg-zinc-900/40 border-zinc-800/80" : "bg-white border-zinc-200"
+                        }`}>
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase block">Elektronegativitas</span>
+                          <span className="text-sm font-mono font-bold text-amber-400 mt-0.5 block">
+                            {activeInspector.electronegativity ? `${activeInspector.electronegativity} Pauling` : "—"}
+                          </span>
+                        </div>
+
+                        <div className={`p-2.5 rounded-xl border text-xs ${
+                          isDark ? "bg-zinc-900/40 border-zinc-800/80" : "bg-white border-zinc-200"
+                        }`}>
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase block">Subkulit Orbital</span>
+                          <span className={`text-sm font-mono font-bold mt-0.5 block ${currentBlockTheme.accentColor}`}>
+                            Blok-{activeInspector.block} (l = {activeInspector.block === 's' ? 0 : activeInspector.block === 'p' ? 1 : activeInspector.block === 'd' ? 2 : 3})
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Electron Configuration with Copy Button */}
+                      <div className={`p-3 rounded-xl border text-xs space-y-1.5 ${
+                        isDark ? "bg-zinc-900/40 border-zinc-800/80" : "bg-white border-zinc-200"
+                      }`}>
+                        <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500">
+                          <span>KONFIGURASI ELEKTRON (AUFBAU):</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyText(activeInspector.electronConfiguration, "config")}
+                            className="text-sky-400 hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            {copied === "config" ? "Tersalin!" : "Salin"}
+                          </button>
+                        </div>
+                        <div className="font-mono text-xs font-semibold text-zinc-200 break-all bg-zinc-950/70 p-2 rounded-lg border border-zinc-800">
+                          {activeInspector.electronConfiguration}
+                        </div>
+                      </div>
+
+                      {/* Biloks State Chips */}
+                      <div className={`p-3 rounded-xl border text-xs space-y-2 ${
+                        isDark ? "bg-zinc-900/40 border-zinc-800/80" : "bg-white border-zinc-200"
+                      }`}>
+                        <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 flex items-center justify-between">
+                          <span className="flex items-center gap-1 font-bold">
+                            <Zap className="w-3 h-3 text-amber-400" />
+                            Tingkat Oksidasi yang Lazim:
+                          </span>
+                          <span className="text-[9px] text-zinc-500">Klik nilai untuk salin</span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1.5">
+                          {activeInspector.commonOxidationStates.split(",").map((s) => {
+                            const trimmed = s.trim();
+                            const isPositive = trimmed.startsWith("+");
+                            const isNegative = trimmed.startsWith("-");
+                            return (
+                              <button
+                                key={trimmed}
+                                type="button"
+                                onClick={() => handleCopyText(trimmed, trimmed)}
+                                className={`px-2.5 py-0.5 rounded-md text-xs font-mono font-bold border transition-transform hover:scale-105 cursor-pointer ${
+                                  isPositive
+                                    ? "bg-amber-500/15 border-amber-500/40 text-amber-400"
+                                    : isNegative
+                                    ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400"
+                                    : "bg-zinc-800 border-zinc-700 text-zinc-300"
+                                }`}
+                              >
+                                {copied === trimmed ? "✓" : <Latex math={trimmed} />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="redox"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.15 }}
+                      className="space-y-3"
+                    >
+                      {/* Tactical Chemical Character & Redox Briefing */}
+                      <div className={`p-3.5 rounded-xl border text-xs leading-relaxed space-y-2.5 ${
+                        isDark ? "bg-zinc-900/30 border-zinc-800/80" : "bg-white border-zinc-200"
+                      }`}>
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-sky-400">
+                          <Compass className="w-3.5 h-3.5" />
+                          <span>Profil Reaktivitas Kimiawi:</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-400 leading-relaxed font-normal">
+                          {activeInspector.description}
+                        </p>
+
+                        {activeInspector.redoxRole && (
+                          <div className="pt-2 border-t border-zinc-800/80 text-[11px] text-amber-300/95 font-mono flex items-start gap-1.5">
+                            <Flame className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                            <span>{activeInspector.redoxRole}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className={`p-3 rounded-xl border text-xs ${
+                        isDark ? "bg-zinc-900/20 border-zinc-800" : "bg-zinc-50 border-zinc-200"
+                      }`}>
+                        <span className="text-[10px] font-mono uppercase text-zinc-500 block mb-1">Pedoman Reaksi Stoikiometri</span>
+                        <p className="text-[11px] text-zinc-400">
+                          Unsur ini terintegrasi penuh ke dalam Redoks Engine Chemly untuk perhitungan koefisien matriks asam/basa Gauss-Jordan.
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+              </div>
+
+              {/* Explicit Action Buttons Bottom */}
+              <div className="pt-4 border-t border-zinc-800/80 flex items-center gap-2 relative z-10">
+                <button
+                  type="button"
+                  onClick={() => handleExplicitInsert(activeInspector.symbol)}
+                  className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md ${
+                    isDark 
+                      ? "bg-white text-black hover:bg-zinc-200 shadow-white/10" 
+                      : "bg-black text-white hover:bg-zinc-800 shadow-black/10"
+                  }`}
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Masukkan {activeInspector.symbol} ke Reaksi</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleCopyText(activeInspector.symbol, "symbol")}
+                  className={`p-2.5 rounded-xl border text-xs transition-colors cursor-pointer ${
+                    isDark 
+                      ? "border-zinc-800 bg-zinc-900 text-zinc-300 hover:text-white hover:border-zinc-700" 
+                      : "border-zinc-300 bg-zinc-100 text-zinc-700 hover:text-black"
+                  }`}
+                  title="Salin Simbol"
+                >
+                  {copied === "symbol" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
+
+            {/* ANDROID MOBILE SHEET DRAWER */}
+            <AnimatePresence>
+              {mobileDrawerOpen && (
+                <motion.div
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ type: "spring", damping: 26, stiffness: 300 }}
+                  className={`lg:hidden fixed bottom-0 left-0 right-0 max-h-[88vh] rounded-t-3xl border-t p-5 flex flex-col justify-between shadow-2xl z-50 overflow-y-auto backdrop-blur-3xl ${
+                    isDark ? "bg-zinc-950/95 border-zinc-800 text-zinc-100" : "bg-white/95 border-zinc-200 text-zinc-900"
+                  }`}
+                >
+                  <div>
+                    <div className="w-12 h-1 rounded-full bg-zinc-700 mx-auto mb-4" />
+                    
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <div className="flex items-baseline gap-2 font-mono">
+                          <span className="text-2xl font-black text-sky-400">{selectedElement.symbol}</span>
+                          <span className="text-xs text-zinc-500">Z = {selectedElement.atomicNumber}</span>
+                        </div>
+                        <h3 className="text-sm font-bold">{selectedElement.name} ({selectedElement.nameEn})</h3>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setMobileDrawerOpen(false)}
+                        className="p-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400"
+                      >
+                        <ChevronDown className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-3 text-xs">
+                      {/* Bohr Visualizer Mobile */}
+                      <div className="p-3 rounded-2xl border border-zinc-800 bg-black/60 flex flex-col items-center">
+                        <BohrAtomVisualizer
+                          atomicNumber={selectedElement.atomicNumber}
+                          symbol={selectedElement.symbol}
+                          size={115}
+                          className="mb-1"
+                        />
+                        <span className="text-[10px] font-mono text-zinc-500">{selectedElement.atomicMass} u</span>
+                      </div>
+
+                      <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900/50">
+                        <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold">Bilangan Oksidasi:</span>
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {selectedElement.commonOxidationStates.split(",").map((s) => (
+                            <span key={s} className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-amber-500/15 border border-amber-500/30 text-amber-400">
+                              {s.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900/50 text-[11px] space-y-1 font-mono">
+                        <div>Konfigurasi: <span className="text-zinc-200">{selectedElement.electronConfiguration}</span></div>
+                        <div>Blok Orbital: <span className="font-bold uppercase text-sky-400">Blok-{selectedElement.block}</span></div>
+                      </div>
+
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                        {selectedElement.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 mt-4 border-t border-zinc-800 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleExplicitInsert(selectedElement.symbol);
+                        setMobileDrawerOpen(false);
+                      }}
+                      className="flex-1 py-3 rounded-xl bg-white text-black font-bold text-xs flex items-center justify-center gap-1.5 shadow-md"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Masukkan {selectedElement.symbol} ke Reaksi</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyText(selectedElement.symbol, "mob")}
+                      className="p-3 rounded-xl border border-zinc-800 text-zinc-300"
+                    >
+                      {copied === "mob" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
           </div>
 
-          {/* Floating Insert Toast */}
+          {/* Toast Notification Alert */}
           <AnimatePresence>
             {insertToast && (
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 12 }}
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-black font-bold text-xs px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5"
+                initial={{ opacity: 0, y: 12, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 12, scale: 0.95 }}
+                className="absolute bottom-5 left-1/2 -translate-x-1/2 z-50 bg-zinc-900/95 text-zinc-100 border border-zinc-700 text-xs px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 font-mono backdrop-blur-md"
               >
-                <Check className="w-3.5 h-3.5" />
+                <Check className="w-4 h-4 text-emerald-400" />
                 <span>{insertToast}</span>
               </motion.div>
             )}
