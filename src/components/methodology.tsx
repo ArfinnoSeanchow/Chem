@@ -401,7 +401,7 @@ export const Methodology: React.FC<MethodologyProps> = ({ onClose, onExploreModu
             <div className="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-1.5">
               <span className="text-[10px] text-zinc-500 uppercase">Penyetaraan Suasana Asam/Basa</span>
               <p className="text-zinc-300 font-sans text-xs">
-                Penyeimbangan rasio $\mathrm{H}^+$ dan $\mathrm{H_2O}$ secara deterministik:
+                Penyeimbangan rasio H⁺ dan H₂O secara deterministik:
               </p>
               <div className="pt-2 text-amber-400 font-bold">
                 <Latex math="\Delta [\mathrm{O}] \to \mathrm{H_2O}, \quad \Delta [\mathrm{H}] \to \mathrm{H}^+" />

@@ -1,50 +1,57 @@
-<div align="center">
+# Accurate Redox Solver v2
 
-# ⚡ CHEMLY — EXACT RATIONAL REDOX ENGINE
-### *Pecahkan Persamaan Redoks Terkompleks Tanpa Tebakan*
+A clean TypeScript redox engine designed around deterministic chemistry rules rather than guessing from a null-space solution.
 
-[![React](https://img.shields.io/badge/React-18%2B-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4%2B-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![GSAP](https://img.shields.io/badge/GSAP-Animation-88CE02?style=for-the-badge&logo=greensock&logoColor=black)](https://greensock.com/)
-[![Framer Motion](https://img.shields.io/badge/Framer_Motion-Motion-FF0055?style=for-the-badge&logo=framer&logoColor=white)](https://motion.dev/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+## What changed
 
-<br />
+- Exact rational arithmetic for matrix operations.
+- Deterministic half-reaction balancing.
+- Acidic medium handled directly.
+- Basic medium handled by the standard acidic-to-basic conversion.
+- Electron accounting is never hard-coded as balanced.
+- Atom and charge verification are independent.
+- PBO/change-in-oxidation-number analysis supports multiple redox changes.
+- Disproportionation and comproportionation are detected from oxidation-state transitions.
+- Full-reaction balancing uses exact stoichiometric null-space solving only after chemistry-aware auxiliary handling.
+- Intermediate half-reaction states are generated from the actual transformations.
+- Verification returns explicit failures instead of silently converting invalid results into "balanced".
 
-> **Chemly** adalah platform analitik dan komputasi redoks pertama yang memadukan aritmatika ruang-nol matriks linear (*Null-Space Linear Algebra*) dengan presisi pecahan **BigInt**. Menghitung transfer elektron, metode setengah reaksi ion-elektron, PBO, dan ekspor KaTeX dalam hitungan milidetik.
+## Supported notation
 
-<br />
+Examples:
 
-[Jelajahi Demo](#-fitur-unggulan) • [Cara Instalasi](#-instalasi-lokal) • [Arsitektur Komputasi](#-arsitektur-matriks-linear) • [Panduan Kontribusi](#-kontribusi)
+- `Fe2+`
+- `MnO4-`
+- `Cr2O7^2-`
+- `SO4^2-`
+- `H+`
+- `OH-`
+- `H2O`
+- `e-`
+- parentheses such as `Fe2(SO4)3`
 
-</div>
+Equation separator:
 
----
+`->`, `→`, `=`
 
-## 🔬 Mengapa Chemly?
+Species separator:
 
-Kebanyakan kalkulator kimia berbasis web memanfaatkan algoritma *brute-force* atau regresi *floating-point* yang menghasilkan pecahan desimal tidak presisi atau galat pada reaksi multivariat (seperti autoredoks dan konproporsionasi). 
+`+`
 
-**Chemly menyelesaikan masalah ini dari akarnya:**
-* 📐 **Zero Floating-Point Error:** Semua persamaan dipecahkan menggunakan eliminasi Gauss-Jordan rasional murni berbasis `BigInt`.
-* ⚖️ **Hukum Konservasi Mutlak:** Menjamin kesetaraan neraca massa atom dan konservasi muatan listrik IUPAC secara absolut.
-* 🧪 **Dua Sudut Pandang Akademis:** Menyediakan pembongkaran langkah runtut paruh reaksi (Ion-Elektron) dan Perubahan Bilangan Oksidasi (PBO).
+Medium:
 
----
+`acidic | basic | neutral`
 
-## ⚡ Fitur Unggulan
+## Build
 
-| Modul | Keterangan Teknis |
-| :--- | :--- |
-| **Linear Null-Space Solver** | Eliminasi matriks ruang-nol tanpa batas variabel untuk koefisien bilangan bulat terkecil |
-| **Media Asam & Basa Adaptif** | Otomatisasi kompensasi atom $\text{O}$ melalui $\text{H}_2\text{O}$ serta ion $\text{H}^+$ / $\text{OH}^-$ |
-| **Autoredoks & Disproporsionasi** | Deteksi mandiri spesi ganda yang mengalami reduksi dan oksidasi simultan |
-| **Ekspor Multi-Format** | Salin satu-klik ke format KaTeX ($$...$$), LaTeX `\ce{...}` (mhchem), dan plain text untuk MS Word/Docs |
-| **Hardware-Engineered UI** | Tampilan Notch MacBook dinamis yang bertransformasi menjadi Sticky Floating Capsule saat di-scroll |
-| **Interactive Stoichiometry Scaler**| Simulasi kelipatan reaksi (1x - 10x) untuk inspeksi transfer elektron dan energi bebas Gibbs secara riil |
-| **Tabel Periodik 118 Unsur** | Data interaktif bilangan oksidasi lazim, elektronegativitas, dan konfigurasi elektron unsur |
+```bash
+npm install
+npm run build
+npm test
+```
 
----
+The public API is exported from `src/index.ts`.
 
-## 🧠 Alur Komputasi Reaksi
+## Important scope
+
+This engine targets conventional aqueous inorganic redox chemistry. It intentionally does not pretend that arbitrary organic/coordination chemistry can always be resolved from formula text alone. Ambiguous oxidation-state assignments are reported rather than silently guessed.

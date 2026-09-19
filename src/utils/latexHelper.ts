@@ -239,8 +239,10 @@ export function splitChemicalTerms(sideStr: string): string[] {
 /**
  * Converts a chemical equation (e.g. "KMnO4 + H2C2O4 -> MnO2 + CO2") into full KaTeX string.
  */
-export function equationToLatex(equation: string): string {
-  if (!equation || !equation.trim()) return "";
+export function equationToLatex(equation: string | undefined): string {
+  if (!equation) return "";
+
+  // kode function yang sekarang tetap di bawah sini
   const cleanedEquation = deLatexChemistry(equation);
 
   // Normalize reaction arrow
