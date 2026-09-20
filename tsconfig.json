@@ -1,21 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "allowJs": false,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx"
+    "target":"ES2020","lib":["ES2020","DOM","DOM.Iterable"],"module":"ESNext","moduleResolution":"Bundler","allowImportingTsExtensions":true,"resolveJsonModule":true,"isolatedModules":true,"noEmit":true,"jsx":"react-jsx","strict":true,"skipLibCheck":true,"forceConsistentCasingInFileNames":true
   },
-  "include": ["src"],
-  "references": []
+  "include":["src/App.tsx","src/main.tsx","src/index.css","src/types/**/*.ts","src/utils/**/*.ts","src/formula.ts","src/halfReaction.ts","src/matrix.ts","src/oxidation.ts","src/rational.ts","src/solver.ts"]
 }

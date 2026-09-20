@@ -1,24 +1,9 @@
 {
-  "name": "accurate-redox-solver",
-  "version": "2.0.0",
+  "name": "chemly-redox",
+  "version": "3.0.0",
   "private": true,
-  "description": "Accurate Redox Reaction Solver",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
-    "test": "npm run build && node --test tests/*.test.mjs"
-  },
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  },
-  "devDependencies": {
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "@vitejs/plugin-react": "^4.3.4",
-    "typescript": "^5.8.3",
-    "vite": "^6.3.5"
-  }
+  "scripts": {"dev":"vite","build":"tsc --noEmit && vite build","preview":"vite preview"},
+  "dependencies":{"react":"^19.0.0","react-dom":"^19.0.0"},
+  "devDependencies":{"@types/react":"^19.3.0","@types/react-dom":"^19.3.0","@vitejs/plugin-react":"^4.3.4","typescript":"^5.8.3","vite":"^6.3.5"}
 }
