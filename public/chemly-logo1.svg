@@ -1,0 +1,15 @@
+<svg viewBox="0 0 490 92" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M 68 25 C 58 13 42 7 26 15 C 9 24 5 44 8 62 C 11 78 28 89 45 86 C 58 83 67 74 72 63" stroke="#000000" stroke-width="11.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="102" y1="10" x2="102" y2="84" stroke="#000000" stroke-width="11.5" stroke-linecap="square"/>
+  <line x1="162" y1="10" x2="162" y2="84" stroke="#000000" stroke-width="11.5" stroke-linecap="square"/>
+  <path d="M 102 47 C 114 36 126 36 132 47 C 138 58 150 58 162 47" stroke="#000000" stroke-width="10.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="192" y1="10" x2="192" y2="84" stroke="#000000" stroke-width="11.5" stroke-linecap="square"/>
+  <line x1="192" y1="16" x2="242" y2="16" stroke="#000000" stroke-width="11" stroke-linecap="square"/>
+  <line x1="192" y1="47" x2="236" y2="47" stroke="#000000" stroke-width="10" stroke-linecap="square"/>
+  <line x1="192" y1="78" x2="242" y2="78" stroke="#000000" stroke-width="11" stroke-linecap="square"/>
+  <path d="M 270 84 V 11 L 301 62 L 332 11 V 84" stroke="#000000" stroke-width="11.5" stroke-linecap="square" stroke-linejoin="miter"/>
+  <path d="M 362 10 V 84 H 406" stroke="#000000" stroke-width="11.5" stroke-linecap="square" stroke-linejoin="miter"/>
+  <path d="M 430 10 L 452 46" stroke="#000000" stroke-width="11.5" stroke-linecap="square"/>
+  <path d="M 474 10 L 452 46" stroke="#000000" stroke-width="11.5" stroke-linecap="square"/>
+  <path d="M 452 46 V 67 C 452 79 460 84 472 84" stroke="#000000" stroke-width="11.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

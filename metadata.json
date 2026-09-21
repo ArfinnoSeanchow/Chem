@@ -1,0 +1,6 @@
+{
+  "name": "Chemly",
+  "description": "Chemly - Platform Penyetara Reaksi Redoks Cerdas, Tutor Langkah Demi Langkah, Scanner Reaksi Massal, dan Coefficient Playground.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

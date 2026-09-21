@@ -1,0 +1,188 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+@layer base {
+  html, body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+
+  /* Custom subtle minimalist scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #3f3f46;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #71717a;
+  }
+}
+
+/* Smooth Theme Switch Animation across the entire document */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 0.35s ease, color 0.25s ease, border-color 0.35s ease, box-shadow 0.35s ease !important;
+  transition-delay: 0s !important;
+}
+
+/* Marquee Text Scroll Keyframes */
+@keyframes chemly-marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-chemly-marquee {
+  display: flex;
+  width: max-content;
+  animation: chemly-marquee 28s linear infinite;
+}
+
+.animate-chemly-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Typewriter blinking cursor */
+@keyframes chemly-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-cursor-blink {
+  animation: chemly-blink 0.9s infinite;
+}
+
+/* =========================================================================
+   CSS-PRINT LAYOUT: Dedicated Offline Printable Step-by-Step Worksheet
+   ========================================================================= */
+@media print {
+  @page {
+    margin: 1.5cm;
+    size: A4 portrait;
+  }
+
+  /* Force clean white background and dark text for crisp ink printing */
+  html, body {
+    background: #ffffff !important;
+    color: #09090b !important;
+    font-size: 10.5pt !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Hide navigation, interactive headers, keypad, floating buttons, modals, landing sections */
+  header,
+  nav,
+  footer,
+  .print-hidden,
+  .print\:hidden,
+  button,
+  input,
+  .chemistry-keypad,
+  #header-element,
+  #bottom-nav,
+  #reaction-input-section,
+  #quick-biloks-calculator,
+  #periodic-table-modal,
+  #ai-tutor-modal,
+  #quiz-modal,
+  #export-modal,
+  #redox-notes-modal,
+  .animate-chemly-marquee {
+    display: none !important;
+  }
+
+  /* Main container reset */
+  main {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Dedicated Print Header & Footer */
+  .print-only-header {
+    display: block !important;
+    margin-bottom: 24px !important;
+    padding-bottom: 16px !important;
+    border-bottom: 2px solid #18181b !important;
+  }
+
+  .print-only-footer {
+    display: block !important;
+    margin-top: 32px !important;
+    padding-top: 14px !important;
+    border-top: 1px solid #d4d4d8 !important;
+    font-size: 8.5pt !important;
+    color: #71717a !important;
+    text-align: center !important;
+  }
+
+  /* Ensure steps container fills page cleanly */
+  .printable-steps-container {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #09090b !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Step cards: avoid page break slices */
+  .step-card-print {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    border: 1px solid #d4d4d8 !important;
+    border-radius: 8px !important;
+    margin-bottom: 18px !important;
+    padding: 16px !important;
+    background: #ffffff !important;
+    color: #09090b !important;
+    box-shadow: none !important;
+  }
+
+  /* Force all steps to be expanded during print */
+  .step-body-print {
+    display: block !important;
+    opacity: 1 !important;
+    height: auto !important;
+    overflow: visible !important;
+    visibility: visible !important;
+  }
+
+  /* KaTeX formula contrast */
+  .katex {
+    color: #000000 !important;
+    font-size: 1.05em !important;
+  }
+
+  .katex-display {
+    margin: 6px 0 !important;
+  }
+
+  /* Remove all shadows, glow, and dark mode borders */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}
+
+/* Hide print-only elements on screen */
+@media screen {
+  .print-only-header,
+  .print-only-footer {
+    display: none !important;
+  }
+}
+
+

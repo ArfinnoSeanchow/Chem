@@ -1,0 +1,13 @@
+{
+  "typescript_build": "passed",
+  "tests": 8,
+  "tests_passed": 8,
+  "critical_case": {
+    "input": "MnO4- + Fe2+ + H+ -> Mn2+ + Fe3+ + H2O",
+    "balanced": "MnO₄− + 5 Fe2+ + 8 H+ → Mn2+ + 5 Fe3+ + 4 H₂O",
+    "electronsTransferred": 5,
+    "chargeBalanced": true,
+    "atomBalanced": true,
+    "electronBalanced": true
+  }
+}
