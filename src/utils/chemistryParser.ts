@@ -104,19 +104,34 @@ export function autoCapitalizeChemicalFormula(rawFormula: string): string {
       continue;
     }
 
-    // Check 2-letter element match (case-insensitive)
-    if (i + 1 < len && /[a-zA-Z]/.test(s[i + 1])) {
-      const two = (ch + s[i + 1]).toLowerCase();
-      if (TWO_LETTER_LOWER.has(two)) {
-        // Lookahead: if 3rd char is also letter, e.g. "cho", don't accidentally swallow "ch" if "C" + "H" + "O"
-        // But "cl", "cr", "mn", "fe", "cu", "zn", "br", "na", "al", "ca", "mg", "ba", "pb", "ag" are standard
-        result += TWO_LETTER_LOWER.get(two)!;
-        i += 2;
+    // Preserve explicit uppercase token boundaries.
+    // Examples:
+    //   CO2  -> C + O2  (carbon dioxide)
+    //   C2O4 -> C2 + O4 (oxalate skeleton)
+    //   Co2  -> Co2     (cobalt)
+    //
+    // A two-letter element is only unambiguous when the second letter is
+    // lowercase in the source. This prevents uppercase formulas such as CO2
+    // from being greedily reinterpreted as Co2.
+    if (/[A-Z]/.test(ch)) {
+      if (i + 1 < len && /[a-z]/.test(s[i + 1])) {
+        const two = (ch + s[i + 1]).toLowerCase();
+        if (TWO_LETTER_LOWER.has(two)) {
+          result += TWO_LETTER_LOWER.get(two)!;
+          i += 2;
+          continue;
+        }
+      }
+
+      const one = ch;
+      if (ONE_LETTER_LOWER.has(one.toLowerCase())) {
+        result += one;
+        i++;
         continue;
       }
     }
 
-    // Check 1-letter element match
+    // Lowercase input can still be auto-corrected using the element table.
     const one = ch.toLowerCase();
     if (ONE_LETTER_LOWER.has(one)) {
       result += ONE_LETTER_LOWER.get(one)!;
