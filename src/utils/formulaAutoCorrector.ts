@@ -123,22 +123,45 @@ export function autoCapitalizeFormula(formula: string): string {
       continue;
     }
 
-    // Try 2-letter element match
-    if (i + 1 < len && /[a-zA-Z]/.test(s[i + 1])) {
-      const two = (ch + s[i + 1]).toLowerCase();
-      if (TWO_LETTER_ELEMENTS[two]) {
-        res += TWO_LETTER_ELEMENTS[two];
-        i += 2;
+    // If the source already uses an uppercase element symbol, preserve its
+    // token boundary. In particular, `C2O4` must remain carbon + oxygen;
+    // it must never be reinterpreted as `Co2` (cobalt).
+    if (/[A-Z]/.test(ch)) {
+      if (i + 1 < len && /[a-z]/.test(s[i + 1])) {
+        const two = ch + s[i + 1];
+        if (TWO_LETTER_ELEMENTS[two.toLowerCase()]) {
+          res += TWO_LETTER_ELEMENTS[two.toLowerCase()];
+          i += 2;
+          continue;
+        }
+      }
+
+      if (ONE_LETTER_ELEMENTS[ch.toLowerCase()]) {
+        res += ch;
+        i++;
         continue;
       }
     }
 
-    // Try 1-letter element match
-    const one = ch.toLowerCase();
-    if (ONE_LETTER_ELEMENTS[one]) {
-      res += ONE_LETTER_ELEMENTS[one];
-      i++;
-      continue;
+    // Lowercase input needs case correction. Prefer a two-letter symbol only
+    // when the next character is lowercase; this avoids greedily turning
+    // `c2o4` into `Co2` and preserves the intended C + O tokenization.
+    if (/[a-z]/.test(ch)) {
+      if (i + 1 < len && /[a-z]/.test(s[i + 1])) {
+        const two = (ch + s[i + 1]).toLowerCase();
+        if (TWO_LETTER_ELEMENTS[two]) {
+          res += TWO_LETTER_ELEMENTS[two];
+          i += 2;
+          continue;
+        }
+      }
+
+      const one = ch.toLowerCase();
+      if (ONE_LETTER_ELEMENTS[one]) {
+        res += ONE_LETTER_ELEMENTS[one];
+        i++;
+        continue;
+      }
     }
 
     res += ch;
