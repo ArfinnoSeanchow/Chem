@@ -4,7 +4,7 @@
  * raw LaTeX commands (\mathrm, \longrightarrow, ^_{2}), and missing redox ion charges.
  */
 
-import { normalizeUnicodeChemistry } from "./chemistryParser";
+import { normalizeUnicodeChemistry } from "./chemistryParser.js";
 
 export interface AutoCorrectionResult {
   hasCorrection: boolean;

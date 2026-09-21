@@ -2,7 +2,7 @@
  * Chemistry Formula and Equation Parser
  */
 
-import { deLatexChemistry } from "./formulaAutoCorrector";
+import { deLatexChemistry, splitChemicalSide } from "./formulaAutoCorrector.js";
 
 export const PERIODIC_TABLE_SYMBOLS = new Set([
   "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne",
@@ -61,7 +61,7 @@ export function normalizeUnicodeChemistry(str: string): string {
   const supMap: Record<string, string> = {
     "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4",
     "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9",
-    "⁺": "+", "⁻": "-",
+    "⁺": "+", "⁻": "-", "＋": "+", "−": "-",
   };
   res = res.replace(/([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻]+)/g, (_, match) => {
     const converted = match.split("").map((ch: string) => supMap[ch] || ch).join("");
@@ -88,141 +88,48 @@ export function autoCapitalizeChemicalFormula(rawFormula: string): string {
   let s = rawFormula.trim();
   if (!s) return "";
 
-  // Preserve explicit chemical capitalization. This is critical for `CO2`:
-  // a case-insensitive greedy matcher would incorrectly turn it into `Co2`.
-  const hasExplicitUppercase = /[A-Z]/.test(s);
-
-  // A few ubiquitous molecular/ion formulas are genuinely ambiguous when
-  // written entirely in lowercase (`co2` could be tokenized as Co2). Prefer
-  // the conventional chemistry notation for these common formulas.
-  const lower = s.toLowerCase();
-  const commonLowercase = new Map<string, string>([
-    ["co", "CO"], ["co2", "CO2"], ["co3", "CO3"],
-    ["no", "NO"], ["no2", "NO2"], ["no3", "NO3"],
-    ["po", "PO"], ["po3", "PO3"], ["po4", "PO4"],
-  ]);
-  if (!hasExplicitUppercase && commonLowercase.has(lower)) {
-    return commonLowercase.get(lower)!;
-  }
-
+  // If already contains uppercase letters and no all-lowercase element names, leave mostly intact
+  // But if all lowercase or mixed lowercase e.g. "kmno4", "cu", "hno3", "mn"
   let result = "";
   let i = 0;
+  const len = s.length;
 
-  while (i < s.length) {
+  while (i < len) {
     const ch = s[i];
 
+    // Preserve parentheses, brackets, numbers, pluses, minuses, carets
     if (/[\d()[\]{}*.\-+^]/.test(ch)) {
       result += ch;
       i++;
       continue;
     }
 
-    if (/[A-Za-z]/.test(ch)) {
-      const next = s[i + 1] || "";
-
-      // Explicitly written symbols: `Cr`, `Mn`, `Co`, etc.
-      if (hasExplicitUppercase && /[A-Z]/.test(ch)) {
-        if (/[a-z]/.test(next)) {
-          const two = ch + next;
-          if (TWO_LETTER_LOWER.has(two.toLowerCase())) {
-            result += TWO_LETTER_LOWER.get(two.toLowerCase())!;
-            i += 2;
-            continue;
-          }
-        }
-        const one = ch.toUpperCase();
-        if (ONE_LETTER_LOWER.has(one.toLowerCase())) {
-          result += one;
-          i++;
-          continue;
-        }
-      }
-
-      // Lowercase/mixed input: infer conventional element capitalization.
-      if (i + 1 < s.length && /[a-zA-Z]/.test(next)) {
-        const two = (ch + next).toLowerCase();
-        if (TWO_LETTER_LOWER.has(two)) {
-          result += TWO_LETTER_LOWER.get(two)!;
-          i += 2;
-          continue;
-        }
-      }
-
-      const one = ch.toLowerCase();
-      if (ONE_LETTER_LOWER.has(one)) {
-        result += ONE_LETTER_LOWER.get(one)!;
-        i++;
+    // Check 2-letter element match (case-insensitive)
+    if (i + 1 < len && /[a-zA-Z]/.test(s[i + 1])) {
+      const two = (ch + s[i + 1]).toLowerCase();
+      if (TWO_LETTER_LOWER.has(two)) {
+        // Lookahead: if 3rd char is also letter, e.g. "cho", don't accidentally swallow "ch" if "C" + "H" + "O"
+        // But "cl", "cr", "mn", "fe", "cu", "zn", "br", "na", "al", "ca", "mg", "ba", "pb", "ag" are standard
+        result += TWO_LETTER_LOWER.get(two)!;
+        i += 2;
         continue;
       }
     }
 
+    // Check 1-letter element match
+    const one = ch.toLowerCase();
+    if (ONE_LETTER_LOWER.has(one)) {
+      result += ONE_LETTER_LOWER.get(one)!;
+      i++;
+      continue;
+    }
+
+    // Otherwise keep character as-is (e.g. charge, etc.)
     result += ch;
     i++;
   }
 
   return result;
-}
-
-/**
- * Split one reaction side into species while preserving positive-ion charges.
- * `Cr3+ + Fe3+` -> [`Cr3+`, `Fe3+`].
- */
-function splitSpeciesList(sideStr: string): string[] {
-  const s = sideStr.trim();
-  if (!s) return [];
-
-  const results: string[] = [];
-  let current = "";
-  let groupDepth = 0;
-
-  for (let i = 0; i < s.length; i++) {
-    const ch = s[i];
-
-    // A plus inside charge braces/parentheses is part of the charge, not
-    // the species separator: `Fe^{2+}`, `Fe(2+)`.
-    if (ch === "{" || ch === "(") {
-      groupDepth++;
-      current += ch;
-      continue;
-    }
-    if (ch === "}" || ch === ")") {
-      groupDepth = Math.max(0, groupDepth - 1);
-      current += ch;
-      continue;
-    }
-    if (ch !== "+" || groupDepth > 0) {
-      current += ch;
-      continue;
-    }
-
-    const trimmed = current.trim();
-    let j = i + 1;
-    while (j < s.length && /\s/.test(s[j])) j++;
-    const next = j < s.length ? s[j] : "";
-
-    // In `Fe3+ + Cr3+`, the first + is charge and the second + is the
-    // separator. Consume the pair as one operation.
-    if (/^\s*\+/.test(s.slice(i + 1))) {
-      current += "+";
-      if (current.trim()) results.push(current.trim());
-      current = "";
-      i = j;
-      continue;
-    }
-
-    // Terminal + is an ionic charge: H+, Fe3+, NH4+.
-    if (trimmed && next === "") {
-      current += "+";
-      continue;
-    }
-
-    // Otherwise + separates species.
-    if (trimmed) results.push(trimmed);
-    current = "";
-  }
-
-  if (current.trim()) results.push(current.trim());
-  return results;
 }
 
 /**
@@ -244,7 +151,8 @@ export function sanitizeEquationInput(rawInput: string): string {
   if (cleaned.includes(" -> ")) {
     const [left, right] = cleaned.split(" -> ");
     const cleanSide = (side: string) => {
-      return splitSpeciesList(side)
+      // Split on '+' operator (careful with charges)
+      return splitChemicalSide(side)
         .map((term) => {
           let t = term.trim();
           // Fix spaced charge at end: e.g. "c2o4 2-" -> "c2o4^2-", "fe 3+" -> "fe^3+"
@@ -261,7 +169,7 @@ export function sanitizeEquationInput(rawInput: string): string {
   }
 
   // If no arrow yet, clean as single expression
-  return splitSpeciesList(cleaned)
+  return splitChemicalSide(cleaned)
     .map((term) => {
       let t = term.trim();
       t = t.replace(/\s+([0-9]*[+-]|[+-][0-9]*)$/, "^$1");
@@ -511,7 +419,77 @@ export function splitEquation(equation: string): { reactants: string[]; products
     throw new Error("Persamaan harus memiliki dua sisi yang dipisahkan oleh tanda panah (-> atau →).");
   }
 
-  const parseSpeciesList = (sideStr: string): string[] => splitSpeciesList(sideStr);
+  const parseSpeciesList = (sideStr: string): string[] => {
+    let s = sideStr.trim();
+    if (!s) return [];
+
+    // Case 1: Standard equation with spaced pluses: ' + '
+    if (/\s+\+\s+/.test(s)) {
+      return s.split(/\s+\+\s+/).map((t) => t.trim()).filter(Boolean);
+    }
+
+    // Case 2: Space before plus: 'Fe2+ +H+' or 'A +B'
+    if (/\s+\+/.test(s)) {
+      return s.split(/\s+\+/).map((t) => t.trim()).filter(Boolean);
+    }
+
+    // Case 3: Tokenize character by character to safely separate species without corrupting charges
+    const results: string[] = [];
+    let current = "";
+    let i = 0;
+    while (i < s.length) {
+      const ch = s[i];
+
+      if (ch === "+") {
+        const prevChar = current[current.length - 1];
+        const rest = s.slice(i + 1);
+
+        // If current already ends with '+' or '-', this '+' is definitely an addition operator (e.g. 'Fe2++')
+        if (prevChar === "+" || prevChar === "-") {
+          if (current.trim()) results.push(current.trim());
+          current = "";
+          i++;
+          continue;
+        }
+
+        // If followed by space and another plus, e.g. 'Fe2+ + ...' -> this '+' is the charge
+        if (/^\s*\+/.test(rest)) {
+          current += ch;
+          i++;
+          continue;
+        }
+
+        // If followed by an explicit coefficient or chemical start (e.g. '+ 2HCl' or '+2HCl')
+        if (/^\s*\d+\s*[A-Z]/.test(rest)) {
+          if (current.trim()) results.push(current.trim());
+          current = "";
+          i++;
+          continue;
+        }
+
+        // If current already has a caret charge like Cr2O7^2-, then this '+' is an operator
+        if (/\^\{?\d*[+-]\}?$/.test(current.trim())) {
+          if (current.trim()) results.push(current.trim());
+          current = "";
+          i++;
+          continue;
+        }
+
+        // If current already has a trailing sign like MnO4-, then this '+' is an operator
+        if (/[+-]$/.test(current.trim())) {
+          if (current.trim()) results.push(current.trim());
+          current = "";
+          i++;
+          continue;
+        }
+      }
+
+      current += ch;
+      i++;
+    }
+    if (current.trim()) results.push(current.trim());
+    return results;
+  };
 
   const reactants = parseSpeciesList(parts[0]);
   const products = parseSpeciesList(parts[1]);
