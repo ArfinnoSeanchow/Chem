@@ -3,8 +3,8 @@
  * Implements deterministic chemical rules hierarchy and mathematical algebra
  */
 
-import { ParsedSpecies } from "../types/redox";
-import { parseFormulaElements } from "./chemistryParser";
+import { ParsedSpecies } from "../types/redox.js";
+import { parseFormulaElements } from "./chemistryParser.js";
 
 export interface ElementBiloksDetail {
   element: string;

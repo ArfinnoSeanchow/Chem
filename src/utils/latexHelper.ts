@@ -2,7 +2,7 @@
  * LaTeX formatting helpers for chemical species, reactions, biloks, and numbers
  */
 
-import { deLatexChemistry } from "./formulaAutoCorrector";
+import { deLatexChemistry } from "./formulaAutoCorrector.js";
 
 /**
  * Normalizes unicode superscripts and subscripts to clean caret and index notation.

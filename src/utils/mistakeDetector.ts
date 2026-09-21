@@ -1,5 +1,5 @@
-import { parseFormulaElements } from "./chemistryParser";
-import { detectAndAutoCorrectFormula } from "./formulaAutoCorrector";
+import { parseFormulaElements } from "./chemistryParser.js";
+import { detectAndAutoCorrectFormula } from "./formulaAutoCorrector.js";
 
 export interface MistakeDiagnostic {
   hasMistake: boolean;
