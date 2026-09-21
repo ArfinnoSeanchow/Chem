@@ -1,5 +1,3 @@
-import crypto from "node:crypto";
-
 const MAX_EQUATION_LENGTH = 1000;
 const MAX_BODY_BYTES = 32_000;
 const DEFAULT_ORIGIN = "*";
@@ -13,7 +11,7 @@ export function json(res: any, status: number, payload: unknown, extraHeaders: R
 }
 
 export function setCors(req: any, res: any) {
-  const configured = process.env.CHEMLY_API_ORIGIN?.trim();
+  const configured = (globalThis as any).process?.env?.CHEMLY_API_ORIGIN?.trim();
   const requestOrigin = req?.headers?.origin;
   const origin = configured || (requestOrigin ? requestOrigin : DEFAULT_ORIGIN);
   res.setHeader("Access-Control-Allow-Origin", origin);
@@ -26,7 +24,7 @@ export function setCors(req: any, res: any) {
 export function requestId(req: any) {
   const supplied = String(req?.headers?.["x-request-id"] || "").trim();
   if (/^[A-Za-z0-9._:-]{8,80}$/.test(supplied)) return supplied;
-  return crypto.randomUUID();
+  return globalThis.crypto?.randomUUID?.() ?? `chemly-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
 }
 
 export function normalizedEquation(value: unknown) {

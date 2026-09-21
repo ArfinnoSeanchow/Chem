@@ -1,5 +1,5 @@
-import { detectAndAutoCorrectFormula } from "../../src/utils/formulaAutoCorrector";
-import { bodySizeGuard, fail, json, methodGuard, requestId, setCors, validateEquation } from "../_lib/http";
+import { detectAndAutoCorrectFormula } from "../../src/utils/formulaAutoCorrector.js";
+import { bodySizeGuard, fail, json, methodGuard, requestId, setCors, validateEquation } from "../_lib/http.js";
 
 export default function handler(req: any, res: any) {
   setCors(req, res);

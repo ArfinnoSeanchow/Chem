@@ -1,4 +1,4 @@
-import { json, methodGuard, requestId, setCors } from "./_lib/http";
+import { json, methodGuard, requestId, setCors } from "./_lib/http.js";
 
 export default function handler(req: any, res: any) {
   setCors(req, res);

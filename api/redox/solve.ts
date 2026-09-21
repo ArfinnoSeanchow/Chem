@@ -1,4 +1,4 @@
-import { solveRedoxEquation } from "../../src/utils/redoxSolver";
+import { solveRedoxEquation } from "../../src/utils/redoxSolver.js";
 import {
   bodySizeGuard,
   fail,
@@ -8,9 +8,9 @@ import {
   setCors,
   validateEquation,
   validateMedium,
-} from "../_lib/http";
-import { cacheKey, getCached, setCached } from "../_lib/cache";
-import { rateLimit } from "../_lib/rateLimit";
+} from "../_lib/http.js";
+import { cacheKey, getCached, setCached } from "../_lib/cache.js";
+import { rateLimit } from "../_lib/rateLimit.js";
 
 function readInput(req: any) {
   if (req.method === "GET") {

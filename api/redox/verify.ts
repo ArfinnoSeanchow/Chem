@@ -1,5 +1,5 @@
-import { solveRedoxEquation } from "../../src/utils/redoxSolver";
-import { fail, json, methodGuard, requestId, setCors, validateEquation, validateMedium, bodySizeGuard } from "../_lib/http";
+import { solveRedoxEquation } from "../../src/utils/redoxSolver.js";
+import { fail, json, methodGuard, requestId, setCors, validateEquation, validateMedium, bodySizeGuard } from "../_lib/http.js";
 
 export default function handler(req: any, res: any) {
   setCors(req, res);
